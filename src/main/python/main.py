@@ -1,17 +1,17 @@
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5 import uic 
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
+from PyQt5.QtCore import QThreadPool, QTimer, Qt
+from PyQt5 import uic
 from demod import Demodulator
 from styles import *
 from utils import *
 
-app = QtWidgets.QApplication(sys.argv)
-
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindow(QMainWindow):
     
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    uic.loadUi("mainwindow.ui", self)
+  def __init__(self):
+    super(MainWindow, self).__init__()
+    uic.loadUi(appctxt.get_resource('mainwindow.ui'), self)
     
     # Initial Conditions
     self.memory = {
@@ -41,23 +41,22 @@ class MainWindow(QtWidgets.QMainWindow):
     self.demod = Demodulator(self.freq)
     
     # Threading 
-    self.threadpool = QtCore.QThreadPool()
+    self.threadpool = QThreadPool()
    
     # Display Update Timer
-    self.displayTimer = QtCore.QTimer(self)
+    self.displayTimer = QTimer(self)
     self.displayTimer.setInterval(500)
     self.displayTimer.timeout.connect(self.updateDisplay)
     
     # Devices Update Timer
-    self.deviceCheckTimer = QtCore.QTimer(self)
+    self.deviceCheckTimer = QTimer(self)
     self.deviceCheckTimer.setInterval(1000)
     self.deviceCheckTimer.timeout.connect(self.updateDevices)
     self.deviceCheckTimer.start()
     self.updateDevices()
 
     # Activate First Device
-    if self.deviceBox.count() > 0:
-      self.demod.activateDevice(self.deviceBox.currentData())
+    self.handleDevice(quiet=True)
 
     # Text Setting with Initial Conditions
     self.updateMemoryBtn()
@@ -84,6 +83,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Custom Stylecheet
     self.volume.setStyleSheet(volumeStyle())
+    self.deviceBox.setStyleSheet(comboStyle(appctxt.get_resource('down_arrow.png')))
+
+    # Show Window
+    self.show()
 
   def updateMemoryBtn(self):
     self.memA.setText(parseSaveStr(self.memory, "memA"))
@@ -94,9 +97,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
   def handleMemory(self):
     sender = self.sender().objectName()
-    modifiers = QtWidgets.QApplication.keyboardModifiers()
+    modifiers = QApplication.keyboardModifiers()
 
-    if modifiers == QtCore.Qt.ControlModifier:
+    if modifiers == Qt.ControlModifier:
       self.memory[sender]["freq"] = self.freq
       self.updateMemoryBtn()
     else:
@@ -131,8 +134,8 @@ class MainWindow(QtWidgets.QMainWindow):
   def handlePower(self):
     print("[GUI] Power Toggle")
 
-    if self.deviceBox.currentData() not in self.demod.device:
-      self.demod.activateDevice(self.deviceBox.currentData())
+    if not self.handleDevice():
+      return
     
     if self.running == True:
       self.powerBtn.setText("ON")
@@ -171,11 +174,23 @@ class MainWindow(QtWidgets.QMainWindow):
       if self.deviceBox.itemData(i) not in devices:
        self.deviceBox.removeItem(i)
 
-  def handleDevice(self):
-    currentData = self.deviceBox.currentData()
-    if currentData not in self.demod.device and currentData is not None:
-      self.demod.activateDevice(self.deviceBox.currentData())
+  def handleDevice(self, quiet=False):
+    newDevice = self.deviceBox.currentData()
+    try:
+      if newDevice not in self.demod.device and newDevice is not None:
+        self.demod.activateDevice(newDevice)
+      return True
+    except Exception as e:
+      if not quiet:
+        error_dialog = QErrorMessage()
+        error_dialog.showMessage(str(e))
+        error_dialog.exec_()
+      print(str(e))
+      return False
 
-window = MainWindow()
-window.show()
-app.exec_()
+if __name__ == '__main__':
+  print("Starting CyberRadio...")
+  appctxt = ApplicationContext()
+  window = MainWindow()
+  exit_code = appctxt.app.exec_()
+  sys.exit(exit_code)

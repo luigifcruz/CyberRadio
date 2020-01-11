@@ -30,7 +30,6 @@ class Demodulator(QThread):
     self.pll = PLL(self.samp_rate, self.buff_len)
 
   def activateDevice(self, device):
-    self.device = device
     device = toDevice(device)
 
     print("[DEMOD] Activating {} device.".format(device["label"]))
@@ -44,6 +43,8 @@ class Demodulator(QThread):
     self.sdr.setGainMode(SOAPY_SDR_RX, 0, True)
     self.sdr.setSampleRate(SOAPY_SDR_RX, 0, self.samp_rate)
     self.sdr.setFrequency(SOAPY_SDR_RX, 0, self.freq)
+    
+    self.device = str(device)
 
   def setFreq(self, freq):
     self.freq = freq

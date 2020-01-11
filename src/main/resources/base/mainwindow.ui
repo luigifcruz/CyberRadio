@@ -74,7 +74,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #2d2d2d; border: 2px solid #87fea3; color: #87fea3; border-radius: 8px; opacity: 0.1;</string>
+     <string notr="true">background-color: transparent; border: 2px solid #87fea3; color: #87fea3; border-radius: 8px; opacity: 0.1;</string>
     </property>
     <property name="text">
      <string>AM</string>
@@ -128,7 +128,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #292929; border-radius: 10px; border: 2px solid #87fea3; color: #87fea3;</string>
+     <string notr="true">background-color: transparent; border-radius: 10px; border: 2px solid #87fea3; color: #87fea3;</string>
     </property>
     <property name="text">
      <string>ON</string>
@@ -363,7 +363,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #2d2d2d; border: none;  color: #4bf6f4;</string>
+     <string notr="true">background-color: transparent; border: none;  color: #4bf6f4;</string>
     </property>
     <property name="text">
      <string>RDS</string>
@@ -394,7 +394,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #2d2d2d;  border: none; color: #4bf6f4;</string>
+     <string notr="true">background-color: transparent;  border: none; color: #4bf6f4;</string>
     </property>
     <property name="text">
      <string>STEREO</string>
@@ -619,10 +619,10 @@
    <widget class="QComboBox" name="deviceBox">
     <property name="geometry">
      <rect>
-      <x>199</x>
-      <y>172</y>
-      <width>200</width>
-      <height>23</height>
+      <x>205</x>
+      <y>171</y>
+      <width>188</width>
+      <height>22</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -633,37 +633,37 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>13</pointsize>
      </font>
     </property>
-   </widget>
-   <widget class="QFrame" name="frame_2">
-    <property name="geometry">
-     <rect>
-      <x>-11</x>
-      <y>-7</y>
-      <width>521</width>
-      <height>221</height>
-     </rect>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #2d2d2d;</string>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <string notr="true"/>
     </property>
    </widget>
    <widget class="QPushButton" name="settingsBtn">
     <property name="geometry">
      <rect>
-      <x>395</x>
-      <y>168</y>
-      <width>102</width>
-      <height>25</height>
+      <x>402</x>
+      <y>171</y>
+      <width>88</width>
+      <height>22</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <pointsize>13</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background: #5B5B5B; border: none; border-radius: 4px; color: #E6E6E6;</string>
     </property>
     <property name="text">
      <string>Settings</string>
@@ -697,6 +697,25 @@
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame_2">
+    <property name="geometry">
+     <rect>
+      <x>-10</x>
+      <y>-10</y>
+      <width>571</width>
+      <height>271</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background: #2d2d2d;</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
     </property>
    </widget>
    <zorder>frame_2</zorder>
