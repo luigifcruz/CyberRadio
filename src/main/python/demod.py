@@ -1,12 +1,12 @@
-from SoapySDR import *
-import SoapySDR
+#from SoapySDR import *
+#import SoapySDR
 import pyaudio
 import signal
 import queue
-import numpy as np
+#import numpy as np
 import collections
 import scipy.signal as sig
-from pll import PLL
+#from pll import PLL
 from PyQt5.QtCore import QThread
 from utils import *
 
@@ -21,7 +21,7 @@ class Demodulator(QThread):
     self.freq = freq
     self.samp_rate = 256e3
     self.audio_fs = int(32e3)
-    self.buff_len = 2048
+    self.buff_len = 1024
     self.samples = int(self.buff_len/8)
     self.vol = 1.0
  
@@ -107,6 +107,7 @@ class Demodulator(QThread):
       rate=self.audio_fs,
       output=True,
       stream_callback=self.fm)
+    self.que.queue.clear()
 
   def fm(self, in_data, frame_count, time_info, status):
     b = np.array(self.que.get()) 
@@ -121,7 +122,7 @@ class Demodulator(QThread):
     b -= np.mean(self.z['dc'])
     
     # Synchronize PLL with Pilot
-    P = sig.lfilter(self.pb, self.pa, b)
+    P = sig.filtfilt(self.pb, self.pa, b)
     self.pll.step(P)
 
     # Demod Left + Right (LPR)
@@ -134,7 +135,7 @@ class Demodulator(QThread):
 
     if self.pll.freq < 19015 and self.pll.freq > 18985:
       # Demod Left - Right (LMR)
-      LMR = (self.pll.mult(2) * b) * 1.05
+      LMR = (self.pll.mult(2) * b) * 1.02
       LMR, self.z['mlmr'] = sig.lfilter(self.mb, self.ma, LMR, zi=self.z['mlmr'])
       LMR = sig.resample(LMR, self.samples, window='hamming')
       LMR, self.z['dlmr'] = sig.lfilter(self.db, self.da, LMR, zi=self.z['dlmr'])

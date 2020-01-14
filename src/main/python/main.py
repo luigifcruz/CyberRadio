@@ -2,6 +2,7 @@ import sys
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
 from PyQt5.QtCore import QThreadPool, QTimer, Qt
+from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
 from styles import *
@@ -76,6 +77,12 @@ class MainWindow(QMainWindow):
     self.memD.clicked.connect(self.handleMemory)
     self.memE.clicked.connect(self.handleMemory)
 
+    # Load Custom Fonts
+    QFontDatabase.addApplicationFont(appctxt.get_resource('fonts/Comfortaa-VariableFont.ttf'))
+    QFontDatabase.addApplicationFont(appctxt.get_resource('fonts/RacingSansOne-Regular.ttf'))
+    QFontDatabase.addApplicationFont(appctxt.get_resource('fonts/RobotoMono-Bold.ttf'))
+    QFontDatabase.addApplicationFont(appctxt.get_resource('fonts/RobotoMono-Regular.ttf'))
+
     # Change Handlers
     self.freqLine.editingFinished.connect(self.handleFreq)
     self.volume.valueChanged.connect(self.handleVol)
@@ -84,6 +91,7 @@ class MainWindow(QMainWindow):
     # Custom Stylecheet
     self.volume.setStyleSheet(volumeStyle())
     self.deviceBox.setStyleSheet(comboStyle(appctxt.get_resource('down_arrow.png')))
+    self.uiToggle(False)
 
     # Show Window
     self.show()
@@ -106,7 +114,7 @@ class MainWindow(QMainWindow):
       self.setFreq(self.memory[sender]["freq"])
 
   def updateDisplay(self):
-    self.chLabel.setText("STEREO" if self.demod.stereo else "MONO")
+    self.chBtn.setText("STEREO" if self.demod.stereo else "MONO")
 
   def handleVol(self):
     self.demod.vol = float(self.volume.value()/100)
@@ -128,14 +136,22 @@ class MainWindow(QMainWindow):
       self.mode = newMode
       if self.mode == 0:
         self.demod.activateFm(self.tau)
+        self.modFmBtn.setEnabled(False)
+        self.modAmBtn.setEnabled(True)
+        self.modAmBtn.setStyleSheet(modBtnDisabled())
+        self.modFmBtn.setStyleSheet(modBtnEnabled())
       elif self.mode == 1:
         self.demod.activateAm()
+        self.modFmBtn.setEnabled(True)
+        self.modAmBtn.setEnabled(False)
+        self.modAmBtn.setStyleSheet(modBtnEnabled())
+        self.modFmBtn.setStyleSheet(modBtnDisabled())
 
   def handlePower(self):
     print("[GUI] Power Toggle")
 
     if not self.handleDevice():
-      return
+        return
     
     if self.running == True:
       self.powerBtn.setText("ON")
@@ -144,6 +160,7 @@ class MainWindow(QMainWindow):
       self.deviceCheckTimer.start()
       self.updateDevices()
       self.deviceBox.setEnabled(True)
+      self.uiToggle(False)
     else:
       self.powerBtn.setText("OFF")
       self.setMode(self.mode, force=True)
@@ -151,6 +168,7 @@ class MainWindow(QMainWindow):
       self.displayTimer.start()
       self.deviceCheckTimer.stop()
       self.deviceBox.setEnabled(False)
+      self.uiToggle(True)
 
     self.running = not self.running  
 
@@ -162,6 +180,19 @@ class MainWindow(QMainWindow):
     print("[GUI] Activating AM")
     self.setMode(1)
 
+  def uiToggle(self, opt):
+    self.modFmBtn.setEnabled(opt)
+    self.modAmBtn.setEnabled(opt)
+
+    self.memA.setEnabled(opt)
+    self.memB.setEnabled(opt)
+    self.memC.setEnabled(opt)
+    self.memD.setEnabled(opt)
+    self.memE.setEnabled(opt)
+
+    self.rdsBtn.setEnabled(opt)
+    self.chBtn.setEnabled(opt)
+    
   def updateDevices(self):
     classes, devices = getDeviceList()
     self.powerBtn.setEnabled(True if len(devices) > 0 else False)
@@ -191,6 +222,7 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
   print("Starting CyberRadio...")
   appctxt = ApplicationContext()
+  appctxt.app.setAttribute(Qt.AA_DisableHighDpiScaling)
   window = MainWindow()
   exit_code = appctxt.app.exec_()
   sys.exit(exit_code)

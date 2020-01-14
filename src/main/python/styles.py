@@ -42,6 +42,11 @@ def comboStyle(arrow):
       color: #E6E6E6;
     }
 
+    QComboBox:disabled {
+      border: 1px solid #5B5B5B;
+      color: #919191;
+    }
+
     QComboBox::drop-down {
       subcontrol-origin: padding;
       subcontrol-position: top right;
@@ -55,4 +60,14 @@ def comboStyle(arrow):
       height: 12px;
       padding-right: 5px;
     }
+  """
+
+def modBtnDisabled():
+  return """
+    background-color: #2d2d2d; border: 2px solid #87fea3; color: #87fea3; border-radius: 8px; font-size: 19px;
+  """
+
+def modBtnEnabled():
+  return """
+    background-color: #87fea3; border: 2px solid #87fea3; color: #2d2d2d; border-radius: 8px; font-size: 19px;
   """

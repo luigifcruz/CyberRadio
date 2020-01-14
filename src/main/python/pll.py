@@ -1,7 +1,7 @@
 import numpy as np
 import collections
 import scipy.signal as sig
-#from numba import njit
+from numba import njit
 
 class PLL:
     def __init__(self, fs, length):
@@ -20,18 +20,18 @@ class PLL:
         print("[PLL] Done ({}, {}, {})".format(self.fs/4, result, np.argmax(phase)))
 
     @staticmethod
-#    @njit(fastmath=True)
+    @njit(fastmath=True)
     def wave(freq, phase, times):
         return np.cos(2.0*np.pi*freq*times+phase)
 
     @staticmethod
-#    @njit(fastmath=True)
+    @njit(fastmath=True)
     def freq_estimator(x, fs):
         zeros = np.where(np.diff(np.signbit(x)))[0]
         return fs/np.mean(np.diff(zeros[5:-5]))/2
 
     @staticmethod
-#    @njit(fastmath=True)
+    @njit(fastmath=True)
     def alignments(x, algn, freq, times):
         err_ls = []
         for i in range(len(algn)):

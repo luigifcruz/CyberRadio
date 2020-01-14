@@ -1,0 +1,16 @@
+{
+    "app_name": "CyberRadio",
+    "author": "Luigifcruz",
+    "main_module": "src/main/python/main.py",
+    "version": "0.0.0",
+    "exclude_modules": [
+        "tk",
+        "matplotlib",
+        "IPython",
+        "notebook",
+        "PIL",
+        "ipykernel",
+        "jupyter_client",
+        "jupyter_core"
+    ]
+}
