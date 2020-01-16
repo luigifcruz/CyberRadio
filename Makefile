@@ -11,5 +11,7 @@ compiler:
 
 build:
 	docker run -v $(CD):/home cyberradio_linux_x64
-	#make fix-permission
-	#fbs installer
+	make fix-permission
+
+release:
+	fbs installer

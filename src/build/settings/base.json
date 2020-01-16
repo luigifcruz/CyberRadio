@@ -3,6 +3,7 @@
     "author": "Luigifcruz",
     "main_module": "src/main/python/main.py",
     "version": "0.0.0",
+    "hidden_imports": [],
     "exclude_modules": [
         "tk",
         "matplotlib",

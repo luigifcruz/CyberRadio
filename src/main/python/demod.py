@@ -1,14 +1,14 @@
-#from SoapySDR import *
-#import SoapySDR
+from SoapySDR import *
+import SoapySDR
 import pyaudio
 import signal
 import queue
-#import numpy as np
+import numpy as np
 import collections
 import scipy.signal as sig
-#from pll import PLL
+from pll import PLL
 from PyQt5.QtCore import QThread
-from utils import *
+from utils import toDevice
 
 class Demodulator(QThread):
   
@@ -17,14 +17,13 @@ class Demodulator(QThread):
 
     self.device = dict()
     self.running = False
-
     self.freq = freq
     self.samp_rate = 256e3
     self.audio_fs = int(32e3)
     self.buff_len = 1024
     self.samples = int(self.buff_len/8)
     self.vol = 1.0
- 
+
     self.p = pyaudio.PyAudio()
     self.que = queue.Queue()
     self.pll = PLL(self.samp_rate, self.buff_len)

@@ -1,14 +1,46 @@
-FROM luigifreitas/pyinstaller-linux-16-376
+FROM luigifreitas/pyinstaller-linux-14
 
 RUN apt-get update
-RUN apt-get install -y build-essential cmake git --no-install-recommends
+RUN apt-get install -y pkg-config libmpfr-dev libgmp3-dev libmpc-dev flex bison build-essential cmake git python3-dbg swig swig3.0 libusb-1.0-0-dev libusb-1.0-0 --no-install-recommends
 
-RUN apt-get install -y python3-dbg swig swig3.0 libusb-1.0-0-dev libusb-1.0-0 --no-install-recommends
+RUN git clone https://github.com/Kitware/CMake.git \
+    && cd CMake \
+    && git checkout release \
+    && ./configure && make -j$(nproc) && make install \
+    && cd ./../..
+
+RUN wget https://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz \
+    && tar xf gcc-7.5.0.tar.xz \
+    && cd gcc-7.5.0 \
+    && ./configure --disable-checking --enable-languages=c,c++ \
+    --enable-multiarch --enable-shared --disable-multilib --enable-threads=posix  \
+    --without-included-gettext --with-system-zlib --with-tune=generic \
+    && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+RUN apt-get install -y perl '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev --no-install-recommends
+
+RUN cp /etc/apt/sources.list /etc/apt/sources.list~
+RUN sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get build-dep qt5-default -y
+
+RUN wget http://download.qt.io/official_releases/qt/5.13/5.13.2/single/qt-everywhere-src-5.13.2.tar.xz \
+    && tar xf qt-everywhere-src-5.13.2.tar.xz \
+    && cd qt-everywhere-src-5.13.2 \
+    && ./configure -platform linux-g++-64 -opensource -static -release -confirm-license \ 
+    -nomake examples -nomake tests \
+    -skip qtconnectivity -skip networkauth -skip multimedia -skip datavis3d -skip webview -skip androidextras -skip webengine -skip serialport -skip translations \
+    -skip virtualkeyboard -skip svg -skip wayland -skip charts -skip sensors -skip doc -skip serialbus -skip gamepad -skip speech -skip 3d -skip location -skip websockets \
+    -qt-xcb -no-dbus -no-opengl -no-openssl -gui -silent \
+    && make -j$(nproc) && make install \
+    && cd ./..
 
 RUN git clone https://github.com/pothosware/SoapySDR.git \
     && cd SoapySDR \
     && mkdir build && cd build \
-    && cmake -Wno-dev -DPYTHON_INSTALL_DIR=/root/.pyenv/versions/3.7.6/lib/python3.7/site-packages .. && make -j$(nproc) && make install \
+    && cmake -Wno-dev -DPYTHON_INSTALL_DIR=/root/.pyenv/versions/3.7.5/lib/python3.7/site-packages .. && make -j$(nproc) && make install \
     && ldconfig \
     && cd ./../..
 
@@ -26,8 +58,6 @@ RUN git clone https://github.com/pothosware/SoapyRTLSDR.git \
     && ldconfig \
     && cd ./../..
 
-RUN apt-get install -y pkg-config --no-install-recommends
-
 RUN git clone https://github.com/airspy/airspyhf.git \
     && cd airspyhf \
     && mkdir build && cd build \
@@ -42,30 +72,15 @@ RUN git clone https://github.com/pothosware/SoapyAirspyHF.git \
     && ldconfig \
     && cd ./../..
 
-RUN apt-get install -y wget libx11-xcb-dev libglu1-mesa-dev libfontconfig1-dev libfreetype6-dev libx11-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev libxcb1-dev libx11-xcb-dev libxcb-glx0-dev --no-install-recommends
-
-RUN wget http://download.qt.io/official_releases/qt/5.9/5.9.2/single/qt-everywhere-opensource-src-5.9.2.tar.xz \
-    && tar xf qt-everywhere-opensource-src-5.9.2.tar.xz \
-    && cd qt-everywhere-opensource-src-5.9.2 \
-    && ./configure -platform linux-g++-64 -opensource -static -release -confirm-license \ 
-    -nomake examples -nomake tests \
-    -skip qtconnectivity -skip networkauth -skip multimedia -skip datavis3d -skip webview -skip androidextras -skip webengine -skip serialport -skip translations \
-    -skip virtualkeyboard -skip svg -skip charts -skip sensors -skip doc -skip serialbus -skip gamepad -skip speech -skip 3d -skip location -skip websockets \
-    -qt-xcb -no-dbus -no-opengl -no-openssl -gui -silent \
-    && make -j$(nproc) && make install \
-    && cd ./../..
-
-
-RUN apt-get install -y portaudio19-dev --no-install-recommends
+RUN apt install -y libpulse-dev libxss1 libsamplerate-dev libasound2-dev portaudio19-dev --no-install-recommends
 
 RUN pip3 install numba
 RUN pip3 install numpy
-RUN pip3 install fbs
-RUN pip3 install pyaudio
+RUN pip3 install git+https://github.com/luigifreitas/fbs.git
 RUN pip3 install scipy
-RUN pip3 install pyqt5==5.11.2
+RUN pip3 install pyaudio
+RUN pip3 install pyqt5
 
 ADD . home
-
 COPY ./docker/generator.sh generator.sh
 ENTRYPOINT ["bash", "./generator.sh"]

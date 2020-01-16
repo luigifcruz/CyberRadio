@@ -1,4 +1,3 @@
-import sys
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
 from PyQt5.QtCore import QThreadPool, QTimer, Qt
@@ -6,7 +5,8 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
 from styles import *
-from utils import *
+from utils import parseSaveStr, getDeviceList
+import sys
 
 class MainWindow(QMainWindow):
     
@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
 
     # Show Window
     self.show()
-
+    
   def updateMemoryBtn(self):
     self.memA.setText(parseSaveStr(self.memory, "memA"))
     self.memB.setText(parseSaveStr(self.memory, "memB"))
@@ -222,7 +222,6 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
   print("Starting CyberRadio...")
   appctxt = ApplicationContext()
-  appctxt.app.setAttribute(Qt.AA_DisableHighDpiScaling)
   window = MainWindow()
   exit_code = appctxt.app.exec_()
   sys.exit(exit_code)
