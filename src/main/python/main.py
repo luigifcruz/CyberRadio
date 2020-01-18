@@ -1,6 +1,6 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
-from PyQt5.QtCore import QThreadPool, QTimer, Qt
+from PyQt5.QtCore import QThreadPool, QTimer, Qt, QThread
 from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
@@ -164,7 +164,7 @@ class MainWindow(QMainWindow):
     else:
       self.powerBtn.setText("OFF")
       self.setMode(self.mode, force=True)
-      self.demod.start()
+      self.demod.start(QThread.TimeCriticalPriority)
       self.displayTimer.start()
       self.deviceCheckTimer.stop()
       self.deviceBox.setEnabled(False)
