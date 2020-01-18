@@ -1,13 +1,7 @@
-FROM luigifreitas/pyinstaller-linux-14
+FROM luigifreitas/pyinstaller-linux-16
 
 RUN apt-get update
 RUN apt-get install -y pkg-config libmpfr-dev libgmp3-dev libmpc-dev flex bison build-essential cmake git python3-dbg swig swig3.0 libusb-1.0-0-dev libusb-1.0-0 --no-install-recommends
-
-RUN git clone https://github.com/Kitware/CMake.git \
-    && cd CMake \
-    && git checkout release \
-    && ./configure && make -j$(nproc) && make install \
-    && cd ./../..
 
 RUN wget https://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.xz \
     && tar xf gcc-7.5.0.tar.xz \
@@ -37,6 +31,7 @@ RUN wget http://download.qt.io/official_releases/qt/5.13/5.13.2/single/qt-everyw
     && make -j$(nproc) && make install \
     && cd ./..
 
+## Install SoapySDR
 RUN git clone https://github.com/pothosware/SoapySDR.git \
     && cd SoapySDR \
     && mkdir build && cd build \
@@ -44,34 +39,82 @@ RUN git clone https://github.com/pothosware/SoapySDR.git \
     && ldconfig \
     && cd ./../..
 
+## Install RTL-SDR SDK
 RUN git clone https://github.com/osmocom/rtl-sdr.git \
     && cd rtl-sdr \
     && mkdir build && cd build \
-    && cmake -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON -DBUILD_SHARED_LIBS=OFF .. && make -j$(nproc) && make install \
+    && cmake -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON .. && make -j$(nproc) && make install \
     && ldconfig \
     && cd ./../..
 
 RUN git clone https://github.com/pothosware/SoapyRTLSDR.git \
     && cd SoapyRTLSDR \
     && mkdir build && cd build \
-    && cmake -DBUILD_SHARED_LIBS=OFF .. && make -j$(nproc) && make install \
+    && cmake .. && make -j$(nproc) && make install \
     && ldconfig \
     && cd ./../..
 
+## Install Airspy HF+ SDK
 RUN git clone https://github.com/airspy/airspyhf.git \
     && cd airspyhf \
     && mkdir build && cd build \
-    && cmake -DINSTALL_UDEV_RULES=ON .. && make -j$(nproc) && make install \
+    && cmake .. && make -j$(nproc) && make install \
     && ldconfig \
     && cd ./../..
 
 RUN git clone https://github.com/pothosware/SoapyAirspyHF.git \
     && cd SoapyAirspyHF \
     && mkdir build && cd build \
-    && cmake -DBUILD_SHARED_LIBS=OFF .. && make -j$(nproc) && make install \
+    && cmake .. && make -j$(nproc) && make install \
     && ldconfig \
     && cd ./../..
 
+## Install LimeSDR SDK
+RUN git clone https://github.com/myriadrf/LimeSuite.git \
+    && cd LimeSuite \
+    && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+## Install Airspy One SDK
+RUN git clone https://github.com/airspy/airspyone_host.git \
+    && cd airspyone_host \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/pothosware/SoapyAirspy.git \
+    && cd SoapyAirspy \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+## Install PlutoSDR SDK
+RUN git clone https://github.com/analogdevicesinc/libiio.git \
+    && cd libiio \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/analogdevicesinc/libad9361-iio.git \
+    && cd libad9361-iio \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/pothosware/SoapyPlutoSDR \
+    && cd SoapyPlutoSDR \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) && make install \
+    && ldconfig \
+    && cd ./../..
+
+## Install Python Dependencies
 RUN apt install -y libpulse-dev libxss1 libsamplerate-dev libasound2-dev portaudio19-dev --no-install-recommends
 
 RUN pip3 install numba
@@ -80,6 +123,7 @@ RUN pip3 install git+https://github.com/luigifreitas/fbs.git
 RUN pip3 install scipy
 RUN pip3 install pyaudio
 RUN pip3 install pyqt5
+RUN pip3 install git+https://github.com/luigifreitas/radio-core.git
 
 ADD . home
 COPY ./docker/generator.sh generator.sh

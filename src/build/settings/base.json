@@ -3,7 +3,10 @@
     "author": "Luigifcruz",
     "main_module": "src/main/python/main.py",
     "version": "0.0.0",
-    "hidden_imports": [],
+    "hidden_imports": [
+        "radio.pll._tools",
+        "scipy.signal"
+    ],
     "exclude_modules": [
         "tk",
         "matplotlib",
