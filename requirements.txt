@@ -1,0 +1,7 @@
+numba
+numpy
+git+https://github.com/luigifreitas/fbs.git
+scipy
+pyaudio
+pyqt5
+git+https://github.com/luigifreitas/radio-core.git
