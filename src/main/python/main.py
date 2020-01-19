@@ -35,7 +35,6 @@ class MainWindow(QMainWindow):
     self.freq = 96.9e6
     self.running = False
     self.mode = 0
-
     self.tau = 75e-6
 
     # Universal Demodulator Configuration
@@ -92,8 +91,9 @@ class MainWindow(QMainWindow):
     self.volume.setStyleSheet(volumeStyle())
     self.deviceBox.setStyleSheet(comboStyle(appctxt.get_resource('down_arrow.png')))
     self.uiToggle(False)
-    self.center()
+    
     # Show Window
+    self.center()
     self.show()
   
   def center(self):

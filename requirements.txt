@@ -1,6 +1,6 @@
 numba
 numpy
-git+https://github.com/luigifreitas/fbs.git
+git+https://github.com/luigifreitas/fbs.git@ubuntu_16.04
 scipy
 pyaudio
 pyqt5

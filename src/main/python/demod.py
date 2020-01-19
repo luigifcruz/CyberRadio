@@ -23,7 +23,7 @@ class Demodulator(QThread):
     self.afs = int(32e3)
 
     self.sdr_buff = 1024
-    self.dsp_buff = self.sdr_buff * 3
+    self.dsp_buff = self.sdr_buff * 4
     self.dsp_out = int(self.dsp_buff/(self.sfs/self.afs))
 
     self.p = pyaudio.PyAudio()
@@ -98,17 +98,25 @@ class Demodulator(QThread):
     self.que.queue.clear()
 
   def fm(self, in_data, frame_count, time_info, status):
+    ## Receive and Demodulate Samples
     L, R = self.demod.run(self.que.get())
-    I = np.zeros((self.dsp_out*2), dtype=np.float32)
 
-    if self.demod.freq < 19015 and self.demod.freq > 18985:
-      I[0::2] = L; I[1::2] = R
-    else:
+    ## Ensure Conversion to F32
+    L = L.astype(np.float32)
+    R = R.astype(np.float32)
+
+    ## Create PyAudio Stereo Matrix 
+    I = np.zeros((self.dsp_out*2), dtype=np.float32)
+    I[0::2] = L; I[1::2] = R
+
+    if self.demod.freq >= 19015 and self.demod.freq <= 18985:
       I[0::2] = L; I[1::2] = L
 
+    ## Further Sanitize the Output
     I *= self.vol
-
-    return (I.reshape(self.dsp_out, 2), pyaudio.paContinue)
+    I = I.reshape(self.dsp_out, 2)
+    
+    return (I.copy(), pyaudio.paContinue)
 
   def activateAm(self):
     print("[DEMOD] Setting up AM demodulator...")
