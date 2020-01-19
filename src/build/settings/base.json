@@ -3,18 +3,16 @@
     "author": "Luigifcruz",
     "main_module": "src/main/python/main.py",
     "version": "0.0.0",
-    "hidden_imports": [
-        "radio.pll._tools",
-        "scipy.signal"
-    ],
-    "exclude_modules": [
-        "tk",
-        "matplotlib",
-        "IPython",
-        "notebook",
-        "PIL",
-        "ipykernel",
-        "jupyter_client",
-        "jupyter_core"
+    "extra_pyinstaller_args": [
+        "--hidden-import", "radio.tools.tuner",
+        "--hidden-import", "scipy.signal",
+        "--exclude-module", "tk",
+        "--exclude-module", "matplotlib",
+        "--exclude-module", "IPython",
+        "--exclude-module", "notebook",
+        "--exclude-module", "PIL",
+        "--exclude-module", "ipykernel",
+        "--exclude-module", "jupyter_client",
+        "--exclude-module", "jupyter_core"
     ]
 }

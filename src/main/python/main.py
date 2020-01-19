@@ -92,9 +92,16 @@ class MainWindow(QMainWindow):
     self.volume.setStyleSheet(volumeStyle())
     self.deviceBox.setStyleSheet(comboStyle(appctxt.get_resource('down_arrow.png')))
     self.uiToggle(False)
-
+    self.center()
     # Show Window
     self.show()
+  
+  def center(self):
+    frameGm = self.frameGeometry()
+    screen = QApplication.desktop().screenNumber(QApplication.desktop().cursor().pos())
+    centerPoint = QApplication.desktop().screenGeometry(screen).center()
+    frameGm.moveCenter(centerPoint)
+    self.move(frameGm.topLeft())
     
   def updateMemoryBtn(self):
     self.memA.setText(parseSaveStr(self.memory, "memA"))

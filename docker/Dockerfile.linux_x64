@@ -115,11 +115,11 @@ RUN git clone https://github.com/pothosware/SoapyPlutoSDR \
     && cd ./../..
 
 ## Install Python Dependencies
-RUN apt install -y libpulse-dev libxss1 libsamplerate-dev libasound2-dev portaudio19-dev --no-install-recommends
+RUN apt install -y libpulse-dev libxss1 libsamplerate-dev libasound2-dev portaudio19-dev  --no-install-recommends
 
 RUN pip3 install numba
 RUN pip3 install numpy
-RUN pip3 install git+https://github.com/luigifreitas/fbs.git
+RUN pip3 install git+https://github.com/luigifreitas/fbs.git@ubuntu_16.04
 RUN pip3 install scipy
 RUN pip3 install pyaudio
 RUN pip3 install pyqt5
