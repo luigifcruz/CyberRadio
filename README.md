@@ -54,6 +54,10 @@ $ fbs run
 ```
 $ fbs freeze
 ```
+##### Generate Installer
+```
+$ fbs installer
+```
 
 ## Hacking
 The DSP used in this project is also available on the [PyAudio](https://github.com/luigifreitas/PyRadio) Repository. This is a better and more comprehensive way to start hacking this App. If you are interested in the core DSP, you should look for [radio-core](https://github.com/luigifreitas/radio-core).
