@@ -18,6 +18,7 @@ class Demodulator(QThread):
 
         self.device = dict()
         self.running = False
+        self.safed = True
         self.mode = 0
 
         self.vol = 1.0
@@ -28,7 +29,6 @@ class Demodulator(QThread):
         self.sdr_buff = 1024
         self.dsp_buff = self.sdr_buff * 4
         self.dsp_out = int(self.dsp_buff/(self.sfs/self.afs))
-        self.que = queue.Queue()
 
     def activateDevice(self, device):
         device = toDevice(device)
@@ -48,15 +48,19 @@ class Demodulator(QThread):
         self.sdr.setFrequency(SOAPY_SDR_RX, 0, self.freq)
 
     def stop(self):
-        print("[DEMOD] Stopping Demodulator")
+        print("[DEMOD] Stopping.")
         self.running = False
+        while not self.safed:
+            pass
 
     def run(self):
-        print("[DEMOD] Starting Demodulator")
+        print("[DEMOD] Starting.")
 
         self.running = True
+        self.safed = False
         buff = np.zeros([self.dsp_buff], dtype=np.complex64)
         self.sdr.activateStream(self.rx)
+        self.que = queue.Queue()
 
         with sd.OutputStream(blocksize=self.dsp_out, callback=self.director,
                              samplerate=self.afs, channels=2):
@@ -68,7 +72,7 @@ class Demodulator(QThread):
 
         self.sdr.deactivateStream(self.rx)
         self.sdr.closeStream(self.rx)
-        print("[DEMOD] Device stream has stopped.")
+        self.safed = True
 
     def director(self, outdata, frames, time, status):
         if self.mode == 0:
@@ -76,32 +80,26 @@ class Demodulator(QThread):
         elif self.mode == 1:
             outdata[:] = np.copy(self.am())
 
-    def activateFm(self, tau):
-        print("[DEMOD] Setting up FM demodulator...")
+    def switchToFM(self, tau):
+        print("[DEMOD] Switching to FM...")
         self.stereo = True
         self.demod = WBFM(tau, self.sfs, self.afs,
                           self.dsp_buff, self.cuda, self.numba)
-        self.que.queue.clear()
         self.mode = 0
 
     def fm(self):
         L, R = self.demod.run(self.que.get())
-        LR = np.zeros((self.dsp_out*2), dtype=np.float32)
 
         if self.demod.freq >= 19015 and self.demod.freq <= 18985:
-            LR[0::2] = L
-            LR[1::2] = L
+            return (np.dstack((L, L)) * self.vol).astype(np.float32)
         else:
-            LR[0::2] = L
-            LR[1::2] = R
+            return (np.dstack((L, R)) * self.vol).astype(np.float32)
 
-        LR *= self.vol
-        return LR.reshape(self.dsp_out, 2)
-
-    def activateAm(self):
-        print("[DEMOD] Setting up AM demodulator...")
+    def switchToAM(self):
+        print("[DEMOD] Switching to AM...")
         self.mode = 1
 
     def am(self):
+        self.que.get()
         LR = np.zeros((self.dsp_out*2), dtype=np.float32)
         return LR.reshape(self.dsp_out, 2)

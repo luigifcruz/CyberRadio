@@ -1,12 +1,12 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from fbs_runtime.platform import is_mac
 from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
-from PyQt5.QtCore import QTimer, Qt, QThread
+from PyQt5.QtCore import QTimer, Qt, QThread, QSettings
 from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
 from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
-from utils import parseSaveStr, getDeviceList
+from utils import parseSaveStr, getDeviceList, defaultFavorites
 import sys
 
 
@@ -25,36 +25,15 @@ class MainWindow(QMainWindow):
             self.enableNumba = False
 
         # Initial Conditions
-        self.memory = {
-            "memA": {
-                "freq": 96.9e6,
-                "band": "FM"
-            },
-            "memB": {
-                "freq": 94.5e6,
-                "band": "FM"
-            },
-            "memC": {
-                "freq": 97.5e6,
-                "band": "FM"
-            },
-            "memD": {
-                "freq": 95.5e6,
-                "band": "FM"
-            },
-            "memE": {
-                "freq": 87.9e6,
-                "band": "FM"
-            },
-        }
-        self.freq = 96.9e6
+        self.checkSettings()
+        self.loadSettings()
+
+        # Routine State
         self.running = False
-        self.mode = 0
-        self.tau = 75e-6
 
         # Print Configurations
-        print("ENABLE CUDA: {}".format(self.enableCuda))
-        print("ENABLE NUMBA: {}".format(self.enableNumba))
+        print("[GUI] Enabled CUDA: {}".format(self.enableCuda))
+        print("[GUI] Enabled Numba: {}".format(self.enableNumba))
 
         # Universal Demodulator Configuration
         self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
@@ -117,6 +96,40 @@ class MainWindow(QMainWindow):
         self.center()
         self.show()
 
+    def closeEvent(self, event):
+        self.displayTimer.stop()
+        self.demod.stop()
+        self.saveSettings()
+        print("[GUI] Exiting...")
+
+    def checkSettings(self):
+        settings = QSettings('luigicruz', 'CyberRadio')
+        if not settings.value('settings_set', type=bool):
+            print("[GUI] Previous settings not found. Creating new ones.")
+            settings.setValue('settings_set', True)
+            settings.setValue('last_frequency', 96.9e6)
+            settings.setValue('demodulation_mode', 0)
+            settings.setValue('tau', 75e-6)
+            settings.setValue('favorites_list', defaultFavorites())
+            del settings
+
+    def saveSettings(self):
+        print("[GUI] Saving current settings.")
+        settings = QSettings('luigicruz', 'CyberRadio')
+        settings.setValue('last_frequency', self.freq)
+        settings.setValue('demodulation_mode', self.mode)
+        settings.setValue('tau', self.tau)
+        settings.setValue('favorites_list', self.memory)
+        del settings
+
+    def loadSettings(self):
+        print("[GUI] Loading saved settings.")
+        settings = QSettings('luigicruz', 'CyberRadio')
+        self.memory = settings.value('favorites_list')
+        self.freq = settings.value('last_frequency', type=float)
+        self.mode = settings.value('demodulation_mode', type=int)
+        self.tau = settings.value('tau', type=float)
+
     def center(self):
         frameGm = self.frameGeometry()
         screen = QApplication.desktop().screenNumber(
@@ -164,13 +177,13 @@ class MainWindow(QMainWindow):
         if self.mode != newMode or force:
             self.mode = newMode
             if self.mode == 0:
-                self.demod.activateFm(self.tau)
+                self.demod.switchToFM(self.tau)
                 self.modFmBtn.setEnabled(False)
                 self.modAmBtn.setEnabled(True)
                 self.modAmBtn.setStyleSheet(modBtnDisabled())
                 self.modFmBtn.setStyleSheet(modBtnEnabled())
             elif self.mode == 1:
-                self.demod.activateAm()
+                self.demod.switchToAM()
                 self.modFmBtn.setEnabled(True)
                 self.modAmBtn.setEnabled(False)
                 self.modAmBtn.setStyleSheet(modBtnEnabled())
