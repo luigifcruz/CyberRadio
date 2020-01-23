@@ -1,4 +1,5 @@
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
+from fbs_runtime.platform import is_mac
 from PyQt5.QtWidgets import QApplication, QMainWindow, QErrorMessage
 from PyQt5.QtCore import QTimer, Qt, QThread
 from PyQt5.QtGui import QFontDatabase
@@ -14,6 +15,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi(appctxt.get_resource('mainwindow.ui'), self)
+
+        # Detecting System Configurations
+        self.enableCuda = True
+        self.enableNumba = True
+
+        if is_mac():
+            self.enableCuda = False
+            self.enableNumba = False
 
         # Initial Conditions
         self.memory = {
@@ -43,8 +52,12 @@ class MainWindow(QMainWindow):
         self.mode = 0
         self.tau = 75e-6
 
+        # Print Configurations
+        print("ENABLE CUDA: {}".format(self.enableCuda))
+        print("ENABLE NUMBA: {}".format(self.enableNumba))
+
         # Universal Demodulator Configuration
-        self.demod = Demodulator(self.freq)
+        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
 
         # Display Update Timer
         self.displayTimer = QTimer(self)
@@ -171,19 +184,19 @@ class MainWindow(QMainWindow):
 
         if self.running:
             self.powerBtn.setText("ON")
+            self.deviceBox.setEnabled(True)
             self.displayTimer.stop()
             self.demod.stop()
             self.deviceCheckTimer.start()
             self.updateDevices()
-            self.deviceBox.setEnabled(True)
             self.uiToggle(False)
         else:
             self.powerBtn.setText("OFF")
+            self.deviceBox.setEnabled(False)
             self.setMode(self.mode, force=True)
             self.demod.start(QThread.TimeCriticalPriority)
             self.displayTimer.start()
             self.deviceCheckTimer.stop()
-            self.deviceBox.setEnabled(False)
             self.uiToggle(True)
 
         self.running = not self.running

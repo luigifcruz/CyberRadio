@@ -10,11 +10,15 @@ from radio.analog import WBFM
 
 class Demodulator(QThread):
 
-    def __init__(self, freq):
+    def __init__(self, freq, cuda=False, numba=False):
         QThread.__init__(self)
+
+        self.numba = numba
+        self.cuda = cuda
 
         self.device = dict()
         self.running = False
+        self.mode = 0
 
         self.vol = 1.0
         self.freq = freq
@@ -37,6 +41,7 @@ class Demodulator(QThread):
         self.sdr.setSampleRate(SOAPY_SDR_RX, 0, self.sfs)
         self.sdr.setFrequency(SOAPY_SDR_RX, 0, self.freq)
 
+        self.p = pyaudio.PyAudio()
         self.device = str(device)
 
     def setFreq(self, freq):
@@ -50,11 +55,12 @@ class Demodulator(QThread):
     def run(self):
         print("[DEMOD] Starting Demodulator")
 
+        self.running = True
+        self.mode = 0
+
+        buff = np.zeros([self.dsp_buff], dtype=np.complex64)
         self.rx = self.sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
         self.sdr.activateStream(self.rx)
-
-        self.running = True
-        buff = np.zeros([self.dsp_buff], dtype=np.complex64)
 
         while self.running:
             for i in range(self.dsp_buff//self.sdr_buff):
@@ -65,48 +71,36 @@ class Demodulator(QThread):
                     timeoutUs=int(1e9))
             self.que.put(buff.astype(np.complex64))
 
-        self.abortAudio()
         self.sdr.deactivateStream(self.rx)
         self.sdr.closeStream(self.rx)
+
         print("[DEMOD] Device stream has stopped.")
-
-    def abortAudio(self):
-        if not self.running:
-            return
-
-        print("[DEMOD] Aborting audio.")
-        try:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.p.terminate()
-        except Exception as e:
-            print("[DEMOD] Error aborting audio:", e)
 
     def activateFm(self, tau):
         print("[DEMOD] Setting up FM demodulator...")
 
-        self.abortAudio()
+        self.running = True
+        self.mode = 0
+
         self.stereo = True
-        self.demod = WBFM(tau, self.sfs, self.afs, self.dsp_buff)
+        self.demod = WBFM(tau, self.sfs, self.afs, self.dsp_buff, self.cuda, self.numba)
 
-        self.p = pyaudio.PyAudio()
+        stream_info = pyaudio.PaMacCoreStreamInfo(
+            flags=pyaudio.PaMacCoreStreamInfo.paMacCorePlayNice)
+
         self.que.queue.clear()
-
         self.stream = self.p.open(
             format=pyaudio.paFloat32,
             channels=2,
             frames_per_buffer=self.dsp_out,
             rate=self.afs,
             output=True,
+            output_host_api_specific_stream_info=stream_info,
             stream_callback=self.fm)
 
     def fm(self, in_data, frame_count, time_info, status):
         # Receive and Demodulate Samples
         L, R = self.demod.run(self.que.get())
-
-        # Ensure Conversion to F32
-        L = L.astype(np.float32)
-        R = R.astype(np.float32)
 
         # Create PyAudio Stereo Matrix
         LR = np.zeros((self.dsp_out*2), dtype=np.float32)
@@ -122,11 +116,18 @@ class Demodulator(QThread):
         LR *= self.vol
         LR = LR.reshape(self.dsp_out, 2)
 
-        return (LR, pyaudio.paContinue)
+        if not self.running or self.mode == 0:
+            print("[DEMOD] Stopping dangling stream.")
+            self.que.queue.clear()
+            return (None, pyaudio.paAbort)
+
+        return (np.copy(LR.tobytes()), pyaudio.paContinue)
 
     def activateAm(self):
         print("[DEMOD] Setting up AM demodulator...")
-        self.abortAudio()
+
+        self.running = True
+        self.mode = 1
 
     def am(self, in_data, frame_count, time_info, status):
         pass
