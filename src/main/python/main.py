@@ -35,8 +35,13 @@ class MainWindow(QMainWindow):
         print("[GUI] Enabled CUDA: {}".format(self.enableCuda))
         print("[GUI] Enabled Numba: {}".format(self.enableNumba))
 
-        # Universal Demodulator Configuration
+        # Configure Universal Demodulator
         self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
+        self.demod.mode = self.mode
+        self.demod.vol = self.vol
+
+        self.demod.setFM(self.tau)
+        self.demod.setAM()
 
         # Display Update Timer
         self.displayTimer = QTimer(self)
@@ -111,15 +116,17 @@ class MainWindow(QMainWindow):
             settings.setValue('demodulation_mode', 0)
             settings.setValue('tau', 75e-6)
             settings.setValue('favorites_list', defaultFavorites())
+            settings.setValue('volume', 0)
             del settings
 
     def saveSettings(self):
         print("[GUI] Saving current settings.")
         settings = QSettings('luigicruz', 'CyberRadio')
         settings.setValue('last_frequency', self.freq)
-        settings.setValue('demodulation_mode', self.mode)
+        settings.setValue('demodulation_mode', self.demod.mode)
         settings.setValue('tau', self.tau)
         settings.setValue('favorites_list', self.memory)
+        settings.setValue('volume', self.demod.vol)
         del settings
 
     def loadSettings(self):
@@ -129,6 +136,7 @@ class MainWindow(QMainWindow):
         self.freq = settings.value('last_frequency', type=float)
         self.mode = settings.value('demodulation_mode', type=int)
         self.tau = settings.value('tau', type=float)
+        self.vol = settings.value('volume', type=float)
 
     def center(self):
         frameGm = self.frameGeometry()
@@ -173,21 +181,18 @@ class MainWindow(QMainWindow):
             self.demod.setFreq(newFreq)
             self.freq = newFreq
 
-    def setMode(self, newMode, force=False):
-        if self.mode != newMode or force:
-            self.mode = newMode
-            if self.mode == 0:
-                self.demod.switchToFM(self.tau)
-                self.modFmBtn.setEnabled(False)
-                self.modAmBtn.setEnabled(True)
-                self.modAmBtn.setStyleSheet(modBtnDisabled())
-                self.modFmBtn.setStyleSheet(modBtnEnabled())
-            elif self.mode == 1:
-                self.demod.switchToAM()
-                self.modFmBtn.setEnabled(True)
-                self.modAmBtn.setEnabled(False)
-                self.modAmBtn.setStyleSheet(modBtnEnabled())
-                self.modFmBtn.setStyleSheet(modBtnDisabled())
+    def setMode(self, newMode):
+        self.demod.mode = newMode
+        if self.demod.mode == 0:
+            self.modFmBtn.setEnabled(False)
+            self.modAmBtn.setEnabled(True)
+            self.modAmBtn.setStyleSheet(modBtnDisabled())
+            self.modFmBtn.setStyleSheet(modBtnEnabled())
+        elif self.demod.mode == 1:
+            self.modFmBtn.setEnabled(True)
+            self.modAmBtn.setEnabled(False)
+            self.modAmBtn.setStyleSheet(modBtnEnabled())
+            self.modFmBtn.setStyleSheet(modBtnDisabled())
 
     def handlePower(self):
         print("[GUI] Power Toggle")
@@ -206,7 +211,7 @@ class MainWindow(QMainWindow):
         else:
             self.powerBtn.setText("OFF")
             self.deviceBox.setEnabled(False)
-            self.setMode(self.mode, force=True)
+            self.setMode(self.demod.mode)
             self.demod.start(QThread.TimeCriticalPriority)
             self.displayTimer.start()
             self.deviceCheckTimer.stop()
@@ -250,7 +255,7 @@ class MainWindow(QMainWindow):
         newDevice = self.deviceBox.currentData()
         try:
             if newDevice not in self.demod.device and newDevice is not None:
-                self.demod.activateDevice(newDevice)
+                self.demod.setDevice(newDevice)
             return True
         except Exception as e:
             if not quiet:

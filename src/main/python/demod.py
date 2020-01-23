@@ -30,7 +30,7 @@ class Demodulator(QThread):
         self.dsp_buff = self.sdr_buff * 4
         self.dsp_out = int(self.dsp_buff/(self.sfs/self.afs))
 
-    def activateDevice(self, device):
+    def setDevice(self, device):
         device = toDevice(device)
 
         print("[DEMOD] Activating {} device.".format(device["label"]))
@@ -39,9 +39,16 @@ class Demodulator(QThread):
         self.sdr.setGainMode(SOAPY_SDR_RX, 0, True)
         self.sdr.setSampleRate(SOAPY_SDR_RX, 0, self.sfs)
         self.sdr.setFrequency(SOAPY_SDR_RX, 0, self.freq)
-        self.rx = self.sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
 
         self.device = str(device)
+
+    def setFM(self, tau):
+        self.stereo = True
+        self.demod = WBFM(tau, self.sfs, self.afs,
+                          self.dsp_buff, self.cuda, self.numba)
+
+    def setAM(self):
+        pass
 
     def setFreq(self, freq):
         self.freq = freq
@@ -59,33 +66,27 @@ class Demodulator(QThread):
         self.running = True
         self.safed = False
         buff = np.zeros([self.dsp_buff], dtype=np.complex64)
-        self.sdr.activateStream(self.rx)
+        rx = self.sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
+        self.sdr.activateStream(rx)
         self.que = queue.Queue()
 
-        with sd.OutputStream(blocksize=self.dsp_out, callback=self.director,
+        with sd.OutputStream(blocksize=self.dsp_out, callback=self.router,
                              samplerate=self.afs, channels=2):
             while self.running:
                 for i in range(self.dsp_buff//self.sdr_buff):
-                    self.sdr.readStream(self.rx, [buff[(i*self.sdr_buff):]],
+                    self.sdr.readStream(rx, [buff[(i*self.sdr_buff):]],
                                         self.sdr_buff, timeoutUs=int(1e9))
                 self.que.put(buff.astype(np.complex64))
 
-        self.sdr.deactivateStream(self.rx)
-        self.sdr.closeStream(self.rx)
+        self.sdr.deactivateStream(rx)
+        self.sdr.closeStream(rx)
         self.safed = True
 
-    def director(self, outdata, frames, time, status):
+    def router(self, outdata, frames, time, status):
         if self.mode == 0:
             outdata[:] = np.copy(self.fm())
         elif self.mode == 1:
             outdata[:] = np.copy(self.am())
-
-    def switchToFM(self, tau):
-        print("[DEMOD] Switching to FM...")
-        self.stereo = True
-        self.demod = WBFM(tau, self.sfs, self.afs,
-                          self.dsp_buff, self.cuda, self.numba)
-        self.mode = 0
 
     def fm(self):
         L, R = self.demod.run(self.que.get())
@@ -94,10 +95,6 @@ class Demodulator(QThread):
             return (np.dstack((L, L)) * self.vol).astype(np.float32)
         else:
             return (np.dstack((L, R)) * self.vol).astype(np.float32)
-
-    def switchToAM(self):
-        print("[DEMOD] Switching to AM...")
-        self.mode = 1
 
     def am(self):
         self.que.get()
