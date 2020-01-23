@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         uic.loadUi(appctxt.get_resource('mainwindow.ui'), self)
 
         # Detecting System Configurations
-        self.enableCuda = True
+        self.enableCuda = False
         self.enableNumba = True
 
         if is_mac():
