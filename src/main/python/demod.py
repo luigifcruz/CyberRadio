@@ -70,8 +70,8 @@ class Demodulator(QThread):
         self.sdr.activateStream(rx)
         self.que = queue.Queue()
 
-        with sd.OutputStream(blocksize=self.dsp_out, callback=self.router,
-                             samplerate=self.afs, channels=2):
+        with sd.RawOutputStream(blocksize=self.dsp_out, callback=self.router,
+                                samplerate=self.afs, channels=2):
             while self.running:
                 for i in range(self.dsp_buff//self.sdr_buff):
                     self.sdr.readStream(rx, [buff[(i*self.sdr_buff):]],
@@ -84,9 +84,9 @@ class Demodulator(QThread):
 
     def router(self, outdata, frames, time, status):
         if self.mode == 0:
-            outdata[:] = np.copy(self.fm())
+            outdata[:] = self.fm().tobytes()
         elif self.mode == 1:
-            outdata[:] = np.copy(self.am())
+            outdata[:] = self.am().tobytes()
 
     def fm(self):
         L, R = self.demod.run(self.que.get())
