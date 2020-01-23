@@ -69,8 +69,8 @@ This is a list of unfinished tasks that I pretend to pursue soon. Pull requests 
 - [ ] Add USB/LSB Support.
 - [ ] Add TX capability.
 - [ ] Finish RDS decoder.
-- [ ] Add more settings.
-- [ ] Implement settings memory.
+- [x] Add more settings.
+- [x] Implement settings memory.
 - [ ] Better Stereo reliability detector.
 - [ ] Docker cross-compiler for AArch-64.
 - [ ] Docker cross-compiler for Windows.

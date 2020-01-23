@@ -19,6 +19,14 @@ def parseSaveStr(memory, name):
     return str(memory[name]["freq"]/1e6) + " " + memory[name]["band"]
 
 
+def isCudaCapable():
+    try:
+        import cupy
+    except ImportError:
+        return False
+    return True
+
+
 def defaultFavorites():
     return {
             "memA": {

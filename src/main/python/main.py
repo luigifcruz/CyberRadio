@@ -7,41 +7,23 @@ from PyQt5 import uic
 from demod import Demodulator
 from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
 from utils import parseSaveStr, getDeviceList, defaultFavorites
+from settings import SettingsWindow
 import sys
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, appctxt):
         super(MainWindow, self).__init__()
-        uic.loadUi(appctxt.get_resource('mainwindow.ui'), self)
+        self.appctxt = appctxt
 
-        # Detecting System Configurations
-        self.enableCuda = False
-        self.enableNumba = True
+        uic.loadUi(self.appctxt.get_resource('mainwindow.ui'), self)
 
-        if is_mac():
-            self.enableCuda = False
-            self.enableNumba = False
-
-        # Initial Conditions
-        self.checkSettings()
+        # Load Settings
         self.loadSettings()
 
         # Routine State
         self.running = False
-
-        # Print Configurations
-        print("[GUI] Enabled CUDA: {}".format(self.enableCuda))
-        print("[GUI] Enabled Numba: {}".format(self.enableNumba))
-
-        # Configure Universal Demodulator
-        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
-        self.demod.mode = self.mode
-        self.demod.vol = self.vol
-
-        self.demod.setFM(self.tau)
-        self.demod.setAM()
 
         # Display Update Timer
         self.displayTimer = QTimer(self)
@@ -70,6 +52,7 @@ class MainWindow(QMainWindow):
         self.modFmBtn.clicked.connect(self.handleFm)
         self.modAmBtn.clicked.connect(self.handleAm)
         self.powerBtn.clicked.connect(self.handlePower)
+        self.settingsBtn.clicked.connect(self.handleSettingsWindow)
         self.memA.clicked.connect(self.handleMemory)
         self.memB.clicked.connect(self.handleMemory)
         self.memC.clicked.connect(self.handleMemory)
@@ -112,6 +95,9 @@ class MainWindow(QMainWindow):
         if not settings.value('settings_set', type=bool):
             print("[GUI] Previous settings not found. Creating new ones.")
             settings.setValue('settings_set', True)
+            settings.setValue('enable_cuda', not is_mac())
+            settings.setValue('enable_numba', not is_mac())
+            settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
             settings.setValue('demodulation_mode', 0)
             settings.setValue('tau', 75e-6)
@@ -123,6 +109,9 @@ class MainWindow(QMainWindow):
         print("[GUI] Saving current settings.")
         settings = QSettings('luigicruz', 'CyberRadio')
         settings.setValue('last_frequency', self.freq)
+        settings.setValue('enable_cuda', self.enableCuda)
+        settings.setValue('enable_numba', self.enableNumba)
+        settings.setValue('enable_stereo', self.enableStereo)
         settings.setValue('demodulation_mode', self.demod.mode)
         settings.setValue('tau', self.tau)
         settings.setValue('favorites_list', self.memory)
@@ -130,13 +119,37 @@ class MainWindow(QMainWindow):
         del settings
 
     def loadSettings(self):
-        print("[GUI] Loading saved settings.")
+        print("[GUI] Loading settings.")
+        self.checkSettings()
+
         settings = QSettings('luigicruz', 'CyberRadio')
         self.memory = settings.value('favorites_list')
         self.freq = settings.value('last_frequency', type=float)
+        self.enableCuda = settings.value('enable_cuda', type=bool)
+        self.enableNumba = settings.value('enable_numba', type=bool)
+        self.enableStereo = settings.value('enable_stereo', type=bool)
         self.mode = settings.value('demodulation_mode', type=int)
         self.tau = settings.value('tau', type=float)
         self.vol = settings.value('volume', type=float)
+
+        # Print Configurations
+        print("[GUI] Enable CUDA: {}".format(self.enableCuda))
+        print("[GUI] Enable Numba: {}".format(self.enableNumba))
+        print("[GUI] Enable Stereo: {}".format(self.enableStereo))
+        print("[GUI] Demodulator Mode: {}".format(self.mode))
+        print("[GUI] Tau Value: {}".format(self.tau))
+        print("[GUI] Volume Value: {}".format(self.vol))
+        print("[GUI] Initial Freq: {}".format(self.freq))
+
+        # Configure Universal Demodulator
+        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
+        self.demod.mode = self.mode
+        self.demod.vol = self.vol
+
+        self.demod.setFM(self.tau)
+        self.demod.setAM()
+
+        self.saveSettings()
 
     def center(self):
         frameGm = self.frameGeometry()
@@ -145,6 +158,9 @@ class MainWindow(QMainWindow):
         centerPoint = QApplication.desktop().screenGeometry(screen).center()
         frameGm.moveCenter(centerPoint)
         self.move(frameGm.topLeft())
+
+    def handleSettingsWindow(self):
+        self.settingsWindow = SettingsWindow(self)
 
     def updateMemoryBtn(self):
         self.memA.setText(parseSaveStr(self.memory, "memA"))
@@ -195,22 +211,22 @@ class MainWindow(QMainWindow):
             self.modFmBtn.setStyleSheet(modBtnDisabled())
 
     def handlePower(self):
-        print("[GUI] Power Toggle")
-
         if not self.handleDevice():
             return
 
         if self.running:
             self.powerBtn.setText("ON")
             self.deviceBox.setEnabled(True)
+            self.settingsBtn.setEnabled(True)
             self.displayTimer.stop()
-            self.demod.stop()
             self.deviceCheckTimer.start()
             self.updateDevices()
             self.uiToggle(False)
+            self.demod.stop()
         else:
             self.powerBtn.setText("OFF")
             self.deviceBox.setEnabled(False)
+            self.settingsBtn.setEnabled(False)
             self.setMode(self.demod.mode)
             self.demod.start(QThread.TimeCriticalPriority)
             self.displayTimer.start()
@@ -269,6 +285,6 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     print("Starting CyberRadio...")
     appctxt = ApplicationContext()
-    window = MainWindow()
+    window = MainWindow(appctxt)
     exit_code = appctxt.app.exec_()
     sys.exit(exit_code)
