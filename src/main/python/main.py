@@ -269,8 +269,12 @@ class MainWindow(QMainWindow):
 
     def handleDevice(self, quiet=False):
         newDevice = self.deviceBox.currentData()
+
+        if newDevice is None:
+            return False
+
         try:
-            if newDevice not in self.demod.device and newDevice is not None:
+            if newDevice not in self.demod.device:
                 self.demod.setDevice(newDevice)
             return True
         except Exception as e:
