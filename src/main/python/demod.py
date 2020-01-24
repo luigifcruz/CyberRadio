@@ -4,7 +4,7 @@ import queue
 import numpy as np
 from PyQt5.QtCore import QThread
 from utils import toDevice
-from radio.analog import WBFM
+from radio.analog import WBFM, Decimator
 import sounddevice as sd
 
 
@@ -13,22 +13,20 @@ class Demodulator(QThread):
     def __init__(self, freq, cuda=False, numba=False):
         QThread.__init__(self)
 
+        # Global Settings
+        self.device = dict()
         self.numba = numba
         self.cuda = cuda
-
-        self.device = dict()
         self.running = False
+        self.pmode = 1
         self.safed = True
         self.mode = 0
-
         self.vol = 1.0
         self.freq = freq
-        self.sfs = int(256e3)
-        self.afs = int(32e3)
-
-        self.sdr_buff = 1024
-        self.dsp_buff = self.sdr_buff * 4
-        self.dsp_out = int(self.dsp_buff/(self.sfs/self.afs))
+        
+        # FM Settings
+        self.tau = 75e-6
+        self.stereo = True
 
     def setDevice(self, device):
         device = toDevice(device)
@@ -37,18 +35,40 @@ class Demodulator(QThread):
 
         self.sdr = SoapySDR.Device(device)
         self.sdr.setGainMode(SOAPY_SDR_RX, 0, True)
-        self.sdr.setSampleRate(SOAPY_SDR_RX, 0, self.sfs)
         self.sdr.setFrequency(SOAPY_SDR_RX, 0, self.freq)
+        supported_fs = self.sdr.getSampleRateRange(SOAPY_SDR_RX, 0)
 
+        avfs = [
+            [240e3, 256e3, 2.5e6, 3.0e6],
+            [960e3, 480e3, 240e3, 256e3, 768e3, 2.5e6, 3.0e6],
+        ]
+
+        self.sfs = int(768e3)
+        self.mfs = int(240e3)
+        self.afs = int(48e3)
+        
+        for fs in reversed(supported_fs):
+            for pfs in avfs[self.pmode]:
+                if pfs >= fs.minimum() and pfs <= fs.maximum():
+                    self.sfs = int(pfs)
+                    break
+
+        print("[DEMOD] Sampling Rate: {}".format(self.sfs))
+
+        self.sdr_buff = 1024
+        self.dsp_buff = self.sdr_buff * 64
+        self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
+        self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
+
+        self.dec = Decimator(self.sfs, self.mfs, self.dec_out, cuda=self.cuda)
+
+        self.demod = WBFM(self.tau, self.mfs, self.afs,
+                          self.dec_out, cuda=self.cuda, numba=self.numba)
+
+        
+        self.sdr.setSampleRate(SOAPY_SDR_RX, 0, self.sfs)
+        
         self.device = str(device)
-
-    def setFM(self, tau):
-        self.stereo = True
-        self.demod = WBFM(tau, self.sfs, self.afs,
-                          self.dsp_buff, self.cuda, self.numba)
-
-    def setAM(self):
-        pass
 
     def setFreq(self, freq):
         self.freq = freq
@@ -83,20 +103,21 @@ class Demodulator(QThread):
         self.safed = True
 
     def router(self, outdata, frames, time, status):
-        if self.mode == 0:
-            outdata[:] = self.fm().tobytes()
-        elif self.mode == 1:
-            outdata[:] = self.am().tobytes()
+        inp = self.dec.run(self.que.get())
 
-    def fm(self):
-        L, R = self.demod.run(self.que.get())
+        if self.mode == 0:
+            outdata[:] = self.fm(inp).tobytes()
+        elif self.mode == 1:
+            outdata[:] = self.am(inp).tobytes()
+
+    def fm(self, inp):
+        L, R = self.demod.run(inp)
 
         if self.demod.freq >= 19015 and self.demod.freq <= 18985:
             return (np.dstack((L, L)) * self.vol).astype(np.float32)
         else:
             return (np.dstack((L, R)) * self.vol).astype(np.float32)
 
-    def am(self):
-        self.que.get()
+    def am(self, inp):
         LR = np.zeros((self.dsp_out*2), dtype=np.float32)
         return LR.reshape(self.dsp_out, 2)

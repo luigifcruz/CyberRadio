@@ -145,9 +145,7 @@ class MainWindow(QMainWindow):
         self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
-
-        self.demod.setFM(self.tau)
-        self.demod.setAM()
+        self.demod.tau = self.tau
 
         self.saveSettings()
 

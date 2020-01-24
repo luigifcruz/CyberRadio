@@ -21,6 +21,7 @@ Compatible with most SDRs supported by SoapySDR. Based on the [radio-core](https
 
 ## Validated Radios
 - AirSpy HF+ Discovery
+- AirSpy R2/Mini
 - LimeSDR Mini/USB
 - PlutoSDR
 - RTL-SDR
@@ -30,7 +31,7 @@ Pre-compiled binary packages will be available once this app reaches beta. For n
 
 ### System Dependencies
 - SoapySDR Base ([Repo](https://github.com/pothosware/SoapySDR))
-- SoapySDR Modules ([LimeSuite](https://github.com/myriadrf/LimeSuite.git), [AirspyHF](https://github.com/pothosware/SoapyAirspyHF), [PlutoSDR](https://github.com/pothosware/SoapyPlutoSDR), [RTL-SDR](https://github.com/pothosware/SoapyRTLSDR))
+- SoapySDR Modules ([LimeSuite](https://github.com/myriadrf/LimeSuite.git), [AirSpyOne](https://github.com/pothosware/SoapyAirspy), [AirSpyHF](https://github.com/pothosware/SoapyAirspyHF), [PlutoSDR](https://github.com/pothosware/SoapyPlutoSDR), [RTL-SDR](https://github.com/pothosware/SoapyRTLSDR))
 - Python 3.5+ and Pip
 - PulseAudio
 
