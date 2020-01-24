@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         if not settings.value('settings_set', type=bool):
             print("[GUI] Previous settings not found. Creating new ones.")
             settings.setValue('settings_set', True)
-            settings.setValue('enable_cuda', not is_mac())
+            settings.setValue('enable_cuda', False)
             settings.setValue('enable_numba', not is_mac())
             settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
