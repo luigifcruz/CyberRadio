@@ -2,6 +2,7 @@ from SoapySDR import SOAPY_SDR_RX, SOAPY_SDR_CF32
 import SoapySDR
 import queue
 import numpy as np
+import time
 from PyQt5.QtCore import QThread
 from utils import toDevice
 from radio.analog import WBFM, Decimator
@@ -76,7 +77,7 @@ class Demodulator(QThread):
         print("[DEMOD] Stopping.")
         self.running = False
         while not self.safed:
-            pass
+            time.sleep(0.05)
 
     def run(self):
         print("[DEMOD] Starting.")
@@ -101,7 +102,13 @@ class Demodulator(QThread):
         self.safed = True
 
     def router(self, outdata, frames, time, status):
-        inp = self.dec.run(self.que.get())
+        try:
+            inp = self.que.get(timeout=0.5)
+        except queue.Empty:
+            return
+        
+        if not self.running:
+            return
 
         if self.mode == 0:
             outdata[:] = self.fm(inp).tobytes()
@@ -109,7 +116,7 @@ class Demodulator(QThread):
             outdata[:] = self.am(inp).tobytes()
 
     def fm(self, inp):
-        L, R = self.wbfm.run(inp)
+        L, R = self.wbfm.run(self.dec.run(inp))
 
         if self.wbfm.freq >= 19015 and self.wbfm.freq <= 18985:
             return (np.dstack((L, L)) * self.vol).astype(np.float32)
