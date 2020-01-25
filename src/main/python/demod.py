@@ -29,6 +29,9 @@ class Demodulator(QThread):
         self.tau = 75e-6
         self.stereo = True
 
+        # Demodulation FIFO
+        self.que = queue.Queue()
+
     def setDevice(self, device):
         device = toDevice(device)
 
@@ -87,26 +90,28 @@ class Demodulator(QThread):
         buff = np.zeros([self.dsp_buff], dtype=np.complex64)
         rx = self.sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
         self.sdr.activateStream(rx)
-        self.que = queue.Queue()
 
         with sd.RawOutputStream(blocksize=self.dsp_out, callback=self.router,
-                                samplerate=self.afs, channels=2):
+                                samplerate=self.afs, latency='high', channels=2):
             while self.running:
                 for i in range(self.dsp_buff//self.sdr_buff):
                     self.sdr.readStream(rx, [buff[(i*self.sdr_buff):]],
                                         self.sdr_buff, timeoutUs=int(1e9))
                 self.que.put(buff.astype(np.complex64))
 
+        with self.que.mutex:
+            self.que.queue.clear()
+
         self.sdr.deactivateStream(rx)
         self.sdr.closeStream(rx)
         self.safed = True
 
-    def router(self, outdata, frames, time, status):
+    def router(self, outdata, f, t, s):
         try:
             inp = self.que.get(timeout=0.5)
         except queue.Empty:
             return
-        
+
         if not self.running:
             return
 
