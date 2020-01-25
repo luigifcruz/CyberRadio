@@ -110,10 +110,10 @@ class Demodulator(QThread):
         try:
             inp = self.que.get(timeout=0.5)
         except queue.Empty:
-            return
+            raise sd.CallbackAbort
 
         if not self.running:
-            return
+            raise sd.CallbackAbort
 
         if self.mode == 0:
             outdata[:] = self.fm(inp).tobytes()
@@ -124,9 +124,9 @@ class Demodulator(QThread):
         L, R = self.wbfm.run(self.dec.run(inp))
 
         if self.wbfm.freq >= 19015 and self.wbfm.freq <= 18985:
-            return (np.dstack((L, L)) * self.vol).astype(np.float32)
-        else:
-            return (np.dstack((L, R)) * self.vol).astype(np.float32)
+            R = L
+
+        return (np.dstack((L, R)) * self.vol).astype(np.float32)
 
     def am(self, inp):
         LR = np.zeros((self.dsp_out*2), dtype=np.float32)

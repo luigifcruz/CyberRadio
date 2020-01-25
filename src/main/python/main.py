@@ -8,6 +8,7 @@ from demod import Demodulator
 from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
 from utils import parseSaveStr, getDeviceList, defaultFavorites
 from settings import SettingsWindow
+import numpy as np
 import sys
 
 
@@ -79,6 +80,10 @@ class MainWindow(QMainWindow):
         self.deviceBox.setStyleSheet(
             comboStyle(appctxt.get_resource('down_arrow.png')))
         self.uiToggle(False)
+
+        # Print System Information
+        print("[GUI] Python Version:\n{}".format(sys.version))
+        print("[GUI] Numpy Version: {}".format(np.__version__))
 
         # Show Window
         self.center()
