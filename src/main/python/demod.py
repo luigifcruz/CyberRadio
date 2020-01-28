@@ -6,7 +6,7 @@ import time
 from PyQt5.QtCore import QThread
 from utils import toDevice
 from radio.analog import WBFM, Decimator
-import sounddevice as sd
+import importlib
 
 
 class Demodulator(QThread):
@@ -31,6 +31,7 @@ class Demodulator(QThread):
 
         # Demodulation FIFO
         self.que = queue.Queue()
+        self.sd = importlib.import_module("sounddevice")
 
     def setDevice(self, device):
         device = toDevice(device)
@@ -60,7 +61,7 @@ class Demodulator(QThread):
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
 
         self.sdr_buff = 1024
-        self.dsp_buff = self.sdr_buff * 64
+        self.dsp_buff = self.sdr_buff * 16
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
 
@@ -87,16 +88,17 @@ class Demodulator(QThread):
 
         self.running = True
         self.safed = False
+
+        plan = [(i*self.sdr_buff) for i in range(self.dsp_buff//self.sdr_buff)]
         buff = np.zeros([self.dsp_buff], dtype=np.complex64)
         rx = self.sdr.setupStream(SOAPY_SDR_RX, SOAPY_SDR_CF32)
         self.sdr.activateStream(rx)
 
-        with sd.RawOutputStream(blocksize=self.dsp_out, callback=self.router,
-                                samplerate=self.afs, latency='high', channels=2):
+        with self.sd.OutputStream(blocksize=self.dsp_out, callback=self.router,
+                                  samplerate=self.afs, channels=2):
             while self.running:
-                for i in range(self.dsp_buff//self.sdr_buff):
-                    self.sdr.readStream(rx, [buff[(i*self.sdr_buff):]],
-                                        self.sdr_buff, timeoutUs=int(1e9))
+                for i in plan:
+                    self.sdr.readStream(rx, [buff[i:]], self.sdr_buff)
                 self.que.put(buff.astype(np.complex64))
 
         with self.que.mutex:
@@ -110,24 +112,19 @@ class Demodulator(QThread):
         try:
             inp = self.que.get(timeout=0.5)
         except queue.Empty:
-            raise sd.CallbackAbort
-
-        if not self.running:
-            raise sd.CallbackAbort
+            raise self.sd.CallbackAbort
+        finally:
+            if not self.running:
+                raise self.sd.CallbackAbort
 
         if self.mode == 0:
-            outdata[:] = self.fm(inp).tobytes()
-        elif self.mode == 1:
-            outdata[:] = self.am(inp).tobytes()
+            L, R = self.wbfm.run(self.dec.run(inp))
 
-    def fm(self, inp):
-        L, R = self.wbfm.run(self.dec.run(inp))
+            if self.wbfm.freq >= 19010 and self.wbfm.freq <= 18990:
+                R = L
 
-        if self.wbfm.freq >= 19015 and self.wbfm.freq <= 18985:
-            R = L
+            outdata[:] = (np.dstack((L, R)) * self.vol)
 
-        return (np.dstack((L, R)) * self.vol).astype(np.float32)
-
-    def am(self, inp):
-        LR = np.zeros((self.dsp_out*2), dtype=np.float32)
-        return LR.reshape(self.dsp_out, 2)
+        if self.mode == 1:
+            LR = np.zeros((self.dsp_out*2), dtype=np.float32)
+            outdata[:] = LR.reshape(self.dsp_out, 2)
