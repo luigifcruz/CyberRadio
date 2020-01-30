@@ -59,12 +59,12 @@ class Demodulator(QThread):
                     break
 
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
-
+        
         self.sdr_buff = 1024
-        self.dsp_buff = self.sdr_buff * 16
+        self.dsp_buff = self.sdr_buff * 8
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
-
+        print(self.sdr_buff/self.sfs)
         self.dec = Decimator(self.sfs, self.mfs, self.dec_out, cuda=self.cuda)
 
         self.wbfm = WBFM(self.tau, self.mfs, self.afs,
@@ -99,7 +99,7 @@ class Demodulator(QThread):
             while self.running:
                 for i in plan:
                     self.sdr.readStream(rx, [buff[i:]], self.sdr_buff)
-                self.que.put(buff.astype(np.complex64))
+                self.que.put_nowait(buff.astype(np.complex64))
 
         with self.que.mutex:
             self.que.queue.clear()
@@ -109,6 +109,9 @@ class Demodulator(QThread):
         self.safed = True
 
     def router(self, outdata, f, t, s):
+        if self.que.qsize() < 1:
+            time.sleep(0.1)
+
         try:
             inp = self.que.get(timeout=0.5)
         except queue.Empty:
