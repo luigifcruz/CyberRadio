@@ -6,6 +6,7 @@
     "extra_pyinstaller_args": [
         "--hidden-import", "radio.tools.tuner",
         "--hidden-import", "scipy.signal",
+        "--hidden-import", "sounddevice",
         "--exclude-module", "tk",
         "--exclude-module", "matplotlib",
         "--exclude-module", "IPython",
