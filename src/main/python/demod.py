@@ -11,11 +11,13 @@ import importlib
 
 class Demodulator(QThread):
 
-    def __init__(self, freq, cuda=False, numba=False):
+    def __init__(self, freq, model_path,
+                 cuda=False, numba=False, cursed=False):
         QThread.__init__(self)
 
         # Global Settings
         self.device = dict()
+        self.cursed = cursed
         self.numba = numba
         self.cuda = cuda
         self.running = False
@@ -33,6 +35,20 @@ class Demodulator(QThread):
         self.que = queue.Queue()
         self.sd = importlib.import_module("sounddevice")
 
+        # Enable PyTorch Model
+        if self.cursed:
+            try:
+                self.th = importlib.import_module("torch")
+                self.net = importlib.import_module("cursednet")
+
+                self.dev = self.th.device('cuda' if self.th.cuda.is_available() else 'cpu')
+                self.model = self.net.CursedNet(input_ch=2, output_ch=1)
+                self.model = self.model.to(self.dev)
+                self.model.load_state_dict(self.th.load(model_path))
+                self.model.eval()
+            except Exception as e:
+                print('Error importing Torch Library:', e)
+
     def setDevice(self, device):
         device = toDevice(device)
 
@@ -44,13 +60,13 @@ class Demodulator(QThread):
         supported_fs = self.sdr.getSampleRateRange(SOAPY_SDR_RX, 0)
 
         avfs = [
-            [240e3, 256e3, 1.024e6, 2.5e6, 3.0e6],
-            [960e3, 480e3, 240e3, 256e3, 768e3, 1.024e6, 2.5e6, 3.0e6],
+            [256e3, 1.024e6, 2.5e6, 3.0e6],
+            [960e3, 480e3, 256e3, 768e3, 1.024e6, 2.5e6, 3.0e6],
         ]
 
         self.sfs = int(768e3)
-        self.mfs = int(240e3)
-        self.afs = int(48e3)
+        self.mfs = int(256e3)
+        self.afs = int(32e3)
 
         for fs in reversed(supported_fs):
             for pfs in avfs[self.pmode]:
@@ -59,14 +75,14 @@ class Demodulator(QThread):
                     break
 
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
-        
-        self.sdr_buff = 1024
-        self.dsp_buff = self.sdr_buff * 8
-        self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
-        self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
-        print(self.sdr_buff/self.sfs)
-        self.dec = Decimator(self.sfs, self.mfs, self.dec_out, cuda=self.cuda)
 
+        self.sdr_buff = 1024
+        self.dsp_buff = self.sdr_buff * 16
+        self.dec_out = int(self.dsp_buff/(self.sfs/self.mfs))
+        self.dsp_out = int(self.dec_out/(self.mfs/self.afs))
+
+        self.fdec = Decimator(self.afs, self.afs, self.dsp_out, cuda=self.cuda)
+        self.dec = Decimator(self.sfs, self.mfs, self.dec_out, cuda=self.cuda)
         self.wbfm = WBFM(self.tau, self.mfs, self.afs,
                          self.dec_out, cuda=self.cuda, numba=self.numba)
 
@@ -121,7 +137,21 @@ class Demodulator(QThread):
                 raise self.sd.CallbackAbort
 
         if self.mode == 0:
+
+            if self.cursed:
+                inp = self.dec.run(inp)
+                inp = np.stack([np.real(inp), np.imag(inp)])
+                inp = np.expand_dims(inp, axis=0).astype(np.float32)
+                inp = self.th.tensor(inp)
+                res = self.model(inp.to(self.dev))[0]
+                res = res.cpu().detach().numpy()[0]
+                res = self.fdec.run(res)
+                outdata[:] = (np.dstack((res, res)) * self.vol)
+                return
+
             L, R = self.wbfm.run(self.dec.run(inp))
+            L = self.fdec.run(L)
+            R = self.fdec.run(R)
 
             if self.wbfm.freq >= 19010 and self.wbfm.freq <= 18990:
                 R = L

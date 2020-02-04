@@ -27,6 +27,14 @@ def isCudaCapable():
     return True
 
 
+def haveTorch():
+    try:
+        import torch
+    except ImportError:
+        return False
+    return True
+
+
 def defaultFavorites():
     return {
             "memA": {

@@ -1,6 +1,6 @@
 from fbs_runtime.platform import is_mac
 from PyQt5.QtWidgets import QWidget
-from utils import isCudaCapable
+from utils import isCudaCapable, haveTorch
 from PyQt5 import uic
 
 
@@ -25,6 +25,8 @@ class SettingsWindow(QWidget):
         self.stereoCbx.setChecked(self.parent.enableStereo)
         self.stereoCbx.setEnabled(False)
 
+        self.cursedCbx.setChecked(self.parent.enableCursed)
+
         if self.parent.tau == 75e-6:
             self.deemp75Rdio.setChecked(True)
         else:
@@ -37,9 +39,13 @@ class SettingsWindow(QWidget):
         if is_mac():
             self.cudaCbx.setEnabled(False)  # macOS doesn't support CUDA 🤷
 
+        if not haveTorch():
+            self.cursedCbx.setEnabled(False)
+
     def closeEvent(self, event):
         self.parent.enableCuda = self.cudaCbx.isChecked()
         self.parent.enableNumba = self.numbaCbx.isChecked()
+        self.parent.enableCursed = self.cursedCbx.isChecked()
         self.parent.stereoCbx = self.stereoCbx.isChecked()
 
         if self.deemp50Rdio.isChecked():

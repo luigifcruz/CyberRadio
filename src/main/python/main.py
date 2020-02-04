@@ -18,7 +18,12 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.appctxt = appctxt
 
-        uic.loadUi(self.appctxt.get_resource('mainwindow.ui'), self)
+        # Load Path from Resources
+        self.mainwindow = self.appctxt.get_resource('mainwindow.ui')
+        self.cursednet = self.appctxt.get_resource('cursednet.pth')
+
+        # Load Window UI
+        uic.loadUi(self.mainwindow, self)
 
         # Load Settings
         self.loadSettings()
@@ -101,6 +106,7 @@ class MainWindow(QMainWindow):
             print("[GUI] Previous settings not found. Creating new ones.")
             settings.setValue('settings_set', True)
             settings.setValue('enable_cuda', False)
+            settings.setValue('enable_cursed', False)
             settings.setValue('enable_numba', not is_mac())
             settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
@@ -116,6 +122,7 @@ class MainWindow(QMainWindow):
         settings.setValue('last_frequency', self.freq)
         settings.setValue('enable_cuda', self.enableCuda)
         settings.setValue('enable_numba', self.enableNumba)
+        settings.setValue('enable_cursed', self.enableCursed)
         settings.setValue('enable_stereo', self.enableStereo)
         settings.setValue('demodulation_mode', self.demod.mode)
         settings.setValue('tau', self.tau)
@@ -132,6 +139,7 @@ class MainWindow(QMainWindow):
         self.freq = settings.value('last_frequency', type=float)
         self.enableCuda = settings.value('enable_cuda', type=bool)
         self.enableNumba = settings.value('enable_numba', type=bool)
+        self.enableCursed = settings.value('enable_cursed', type=bool)
         self.enableStereo = settings.value('enable_stereo', type=bool)
         self.mode = settings.value('demodulation_mode', type=int)
         self.tau = settings.value('tau', type=float)
@@ -141,13 +149,15 @@ class MainWindow(QMainWindow):
         print("[GUI] Enable CUDA: {}".format(self.enableCuda))
         print("[GUI] Enable Numba: {}".format(self.enableNumba))
         print("[GUI] Enable Stereo: {}".format(self.enableStereo))
+        print("[GUI] Enable Cursed: {}".format(self.enableCursed))
         print("[GUI] Demodulator Mode: {}".format(self.mode))
         print("[GUI] Tau Value: {}".format(self.tau))
         print("[GUI] Volume Value: {}".format(self.vol))
         print("[GUI] Initial Freq: {}".format(self.freq))
 
         # Configure Universal Demodulator
-        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
+        self.demod = Demodulator(self.freq, self.cursednet, self.enableCuda,
+                                 self.enableNumba, self.enableCursed)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
         self.demod.tau = self.tau
