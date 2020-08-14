@@ -2,14 +2,18 @@
 
 cd /home
 
-SoapySDRUtil --info
-
+echo "[GEN] Setup pyenv..."
 export PATH="~/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
-pyenv global 3.7.5
+echo "[GEN] Sanity check..."
+SoapySDRUtil --info
 python3 --version
+echo "+++++++++++++++++++++"
 
+echo "[GEN] Building binary..."
 fbs clean
 fbs freeze
+
+echo "[GEN] Exiting..."

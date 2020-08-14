@@ -22,6 +22,7 @@ def parseSaveStr(memory, name):
 def isCudaCapable():
     try:
         import cupy
+        import cusignal
     except ImportError:
         return False
     return True

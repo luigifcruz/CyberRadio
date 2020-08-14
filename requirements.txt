@@ -2,6 +2,6 @@ numba
 numpy
 scipy
 sounddevice
-pyqt5==5.13.2
-git+https://github.com/luigifreitas/fbs.git@ubuntu_16.04
+pyqt5
+fbs
 git+https://github.com/luigifreitas/radio-core.git

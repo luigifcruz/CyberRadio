@@ -9,8 +9,10 @@ from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
 from utils import parseSaveStr, getDeviceList, defaultFavorites
 from settings import SettingsWindow
 import numpy as np
+import SoapySDR
+import ctypes
 import sys
-
+import os
 
 class MainWindow(QMainWindow):
 
@@ -19,6 +21,9 @@ class MainWindow(QMainWindow):
         self.appctxt = appctxt
 
         uic.loadUi(self.appctxt.get_resource('mainwindow.ui'), self)
+
+        # Load SoapySDR Modules
+        self.loadSoapySDR()
 
         # Load Settings
         self.loadSettings()
@@ -153,6 +158,26 @@ class MainWindow(QMainWindow):
         self.demod.tau = self.tau
 
         self.saveSettings()
+
+    def loadSoapySDR(self):
+        try:
+            soapy_base_dir = self.appctxt.get_resource('soapy-modules')
+            sdr_base_dir = self.appctxt.get_resource('sdr-modules')
+        except:
+            print("[GUI] Loading external modules.")
+            return
+
+        for sdr_name in os.listdir(sdr_base_dir):
+            sdr_path = os.path.join(sdr_base_dir, sdr_name)
+            ctypes.CDLL(sdr_path, ctypes.RTLD_LOCAL)
+
+        for mod_path in SoapySDR.listModules(soapy_base_dir):
+            err = SoapySDR.loadModule(mod_path)
+            if not err:
+                ver = SoapySDR.getModuleVersion(mod_path)
+                print("[GUI] Loaded internal module {} ({})".format(os.path.basename(mod_path), ver))
+            else:
+                print("[GUI] Can't load module {}: {}".format(mod_path, err))
 
     def center(self):
         frameGm = self.frameGeometry()

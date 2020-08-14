@@ -60,7 +60,7 @@ class Demodulator(QThread):
 
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
         
-        self.sdr_buff = 1024
+        self.sdr_buff = 2048
         self.dsp_buff = self.sdr_buff * 8
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
