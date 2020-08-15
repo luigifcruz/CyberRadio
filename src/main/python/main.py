@@ -13,6 +13,9 @@ import SoapySDR
 import ctypes
 import sys
 import os
+import radio
+from platform import python_version
+
 
 class MainWindow(QMainWindow):
 
@@ -87,8 +90,9 @@ class MainWindow(QMainWindow):
         self.uiToggle(False)
 
         # Print System Information
-        print("[GUI] Python Version:\n{}".format(sys.version))
+        print("[GUI] Python Version: {}".format(python_version()))
         print("[GUI] Numpy Version: {}".format(np.__version__))
+        print("[GUI] Core Version: {}".format(radio.__version__))
 
         # Show Window
         self.center()

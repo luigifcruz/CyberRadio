@@ -21,7 +21,6 @@ RUN apt-get install -y --no-install-recommends \
         libgdbm3 \
         uuid-dev \
         upx \
-        libssl-dev \
         libusb-1.0-0-dev \
         gcc-4.8 \
         g++-4.8 \
@@ -121,5 +120,5 @@ RUN cat requirements.txt
 RUN cat requirements.txt | xargs -n 1 -L 1 pip3 install
 
 ADD . home
-COPY ./docker/generator.sh generator.sh
+COPY ./docker/compiler/generator.sh generator.sh
 ENTRYPOINT ["bash", "./generator.sh"]

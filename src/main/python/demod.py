@@ -7,6 +7,7 @@ from PyQt5.QtCore import QThread
 from utils import toDevice
 from radio.analog import WBFM, Decimator
 import importlib
+import ctypes
 
 
 class Demodulator(QThread):
@@ -59,7 +60,7 @@ class Demodulator(QThread):
                     break
 
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
-        
+
         self.sdr_buff = 2048
         self.dsp_buff = self.sdr_buff * 8
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
@@ -97,9 +98,10 @@ class Demodulator(QThread):
         with self.sd.OutputStream(blocksize=self.dsp_out, callback=self.router,
                                   samplerate=self.afs, channels=2):
             while self.running:
-                for i in plan:
-                    self.sdr.readStream(rx, [buff[i:]], self.sdr_buff)
-                self.que.put_nowait(buff.astype(np.complex64))
+                count = 0
+                while count < self.dsp_buff:
+                    count += self.sdr.readStream(rx, [buff[count:]], self.sdr_buff, timeoutUs=int(5e5)).ret
+                self.que.put(buff.astype(np.complex64))
 
         with self.que.mutex:
             self.que.queue.clear()
