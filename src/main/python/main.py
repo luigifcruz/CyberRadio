@@ -6,10 +6,10 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
 from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
-from utils import parseSaveStr, getDeviceList, defaultFavorites
+from utils import parseSaveStr, defaultFavorites
 from settings import SettingsWindow
+from soapy import Soapy
 import numpy as np
-import SoapySDR
 import ctypes
 import sys
 import os
@@ -25,8 +25,8 @@ class MainWindow(QMainWindow):
 
         uic.loadUi(self.appctxt.get_resource('mainwindow.ui'), self)
 
-        # Load SoapySDR Modules
-        self.loadSoapySDR()
+        # Load Soapy
+        self.soapy = Soapy(self.appctxt)
 
         # Load Settings
         self.loadSettings()
@@ -94,6 +94,7 @@ class MainWindow(QMainWindow):
         print("[GUI] Numpy Version: {}".format(np.__version__))
         print("[GUI] Core Version: {}".format(radio.__version__))
 
+
         # Show Window
         self.center()
         self.show()
@@ -156,32 +157,12 @@ class MainWindow(QMainWindow):
         print("[GUI] Initial Freq: {}".format(self.freq))
 
         # Configure Universal Demodulator
-        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
+        self.demod = Demodulator(self.soapy, self.enableCuda, self.enableNumba)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
         self.demod.tau = self.tau
 
         self.saveSettings()
-
-    def loadSoapySDR(self):
-        try:
-            soapy_base_dir = self.appctxt.get_resource('soapy-modules')
-            sdr_base_dir = self.appctxt.get_resource('sdr-modules')
-        except:
-            print("[GUI] Loading external modules.")
-            return
-
-        for sdr_name in os.listdir(sdr_base_dir):
-            sdr_path = os.path.join(sdr_base_dir, sdr_name)
-            ctypes.CDLL(sdr_path, ctypes.RTLD_LOCAL)
-
-        for mod_path in SoapySDR.listModules(soapy_base_dir):
-            err = SoapySDR.loadModule(mod_path)
-            if not err:
-                ver = SoapySDR.getModuleVersion(mod_path)
-                print("[GUI] Loaded internal module {} ({})".format(os.path.basename(mod_path), ver))
-            else:
-                print("[GUI] Can't load module {}: {}".format(mod_path, err))
 
     def center(self):
         frameGm = self.frameGeometry()
@@ -226,7 +207,7 @@ class MainWindow(QMainWindow):
         self.freqLine.setText(str(int(newFreq)).zfill(9))
 
         if self.freq != newFreq:
-            self.demod.setFreq(newFreq)
+            self.soapy.tune(newFreq)
             self.freq = newFreq
 
     def setMode(self, newMode):
@@ -287,7 +268,7 @@ class MainWindow(QMainWindow):
         self.chBtn.setEnabled(opt)
 
     def updateDevices(self):
-        classes, devices = getDeviceList()
+        classes, devices = self.soapy.list()
         self.powerBtn.setEnabled(True if len(devices) > 0 else False)
 
         for i, device in enumerate(devices):
@@ -297,6 +278,9 @@ class MainWindow(QMainWindow):
 
         for i in range(self.deviceBox.count()):
             if self.deviceBox.itemData(i) not in devices:
+                if self.deviceBox.itemData(i) in self.soapy.device:
+                    print("[GUI] Device Removed!")
+                    self.soapy.abandon()
                 self.deviceBox.removeItem(i)
 
     def handleDevice(self, quiet=False):
@@ -306,7 +290,7 @@ class MainWindow(QMainWindow):
             return False
 
         try:
-            if newDevice not in self.demod.device:
+            if newDevice not in self.soapy.device:
                 self.demod.setDevice(newDevice)
             return True
         except Exception as e:
