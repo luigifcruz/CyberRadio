@@ -47,10 +47,8 @@ class Demodulator(QThread):
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
 
-        self.dec = Decimator(self.sfs, self.mfs, self.dec_out, cuda=self.cuda)
-
-        self.wbfm = WBFM(self.tau, self.mfs, self.afs,
-                         self.dec_out, cuda=self.cuda, numba=self.numba)
+        self.dec = Decimator(self.sfs, self.mfs, cuda=self.cuda)
+        self.wbfm = WBFM(self.tau, self.mfs, self.afs, cuda=self.cuda, numba=self.numba)
 
     def stop(self):
         print("[DEMOD] Stopping.")

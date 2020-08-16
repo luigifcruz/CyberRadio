@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
 
         # Value Setting with Initial Conditions
         self.setWindowTitle("CyberRadio")
-        self.volume.setValue(self.demod.vol*100)
+        self.volume.setValue(int(self.demod.vol*100))
 
         # Buttons Handlers Declaration
         self.modFmBtn.clicked.connect(self.handleFm)
@@ -115,6 +115,7 @@ class MainWindow(QMainWindow):
             settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
             settings.setValue('demodulation_mode', 0)
+            settings.setValue('power_mode', 1)
             settings.setValue('tau', 75e-6)
             settings.setValue('favorites_list', defaultFavorites())
             settings.setValue('volume', 0)
@@ -128,6 +129,7 @@ class MainWindow(QMainWindow):
         settings.setValue('enable_numba', self.enableNumba)
         settings.setValue('enable_stereo', self.enableStereo)
         settings.setValue('demodulation_mode', self.demod.mode)
+        settings.setValue('power_mode', self.soapy.power_mode)
         settings.setValue('tau', self.tau)
         settings.setValue('favorites_list', self.memory)
         settings.setValue('volume', self.demod.vol)
@@ -144,6 +146,7 @@ class MainWindow(QMainWindow):
         self.enableNumba = settings.value('enable_numba', type=bool)
         self.enableStereo = settings.value('enable_stereo', type=bool)
         self.mode = settings.value('demodulation_mode', type=int)
+        self.soapy.power_mode = settings.value('power_mode', type=int)
         self.tau = settings.value('tau', type=float)
         self.vol = settings.value('volume', type=float)
 
@@ -152,6 +155,7 @@ class MainWindow(QMainWindow):
         print("[GUI] Enable Numba: {}".format(self.enableNumba))
         print("[GUI] Enable Stereo: {}".format(self.enableStereo))
         print("[GUI] Demodulator Mode: {}".format(self.mode))
+        print("[GUI] Power Mode: {}".format(self.soapy.power_mode))
         print("[GUI] Tau Value: {}".format(self.tau))
         print("[GUI] Volume Value: {}".format(self.vol))
         print("[GUI] Initial Freq: {}".format(self.freq))
