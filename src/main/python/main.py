@@ -6,10 +6,15 @@ from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from demod import Demodulator
 from styles import volumeStyle, comboStyle, modBtnDisabled, modBtnEnabled
-from utils import parseSaveStr, getDeviceList, defaultFavorites
+from utils import parseSaveStr, defaultFavorites
 from settings import SettingsWindow
+from soapy import Soapy
 import numpy as np
+import ctypes
 import sys
+import os
+import radio
+from platform import python_version
 
 
 class MainWindow(QMainWindow):
@@ -19,6 +24,9 @@ class MainWindow(QMainWindow):
         self.appctxt = appctxt
 
         uic.loadUi(self.appctxt.get_resource('mainwindow.ui'), self)
+
+        # Load Soapy
+        self.soapy = Soapy(self.appctxt)
 
         # Load Settings
         self.loadSettings()
@@ -47,7 +55,7 @@ class MainWindow(QMainWindow):
 
         # Value Setting with Initial Conditions
         self.setWindowTitle("CyberRadio")
-        self.volume.setValue(self.demod.vol*100)
+        self.volume.setValue(int(self.demod.vol*100))
 
         # Buttons Handlers Declaration
         self.modFmBtn.clicked.connect(self.handleFm)
@@ -82,8 +90,10 @@ class MainWindow(QMainWindow):
         self.uiToggle(False)
 
         # Print System Information
-        print("[GUI] Python Version:\n{}".format(sys.version))
+        print("[GUI] Python Version: {}".format(python_version()))
         print("[GUI] Numpy Version: {}".format(np.__version__))
+        print("[GUI] Core Version: {}".format(radio.__version__))
+
 
         # Show Window
         self.center()
@@ -105,6 +115,7 @@ class MainWindow(QMainWindow):
             settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
             settings.setValue('demodulation_mode', 0)
+            settings.setValue('power_mode', 1)
             settings.setValue('tau', 75e-6)
             settings.setValue('favorites_list', defaultFavorites())
             settings.setValue('volume', 0)
@@ -118,6 +129,7 @@ class MainWindow(QMainWindow):
         settings.setValue('enable_numba', self.enableNumba)
         settings.setValue('enable_stereo', self.enableStereo)
         settings.setValue('demodulation_mode', self.demod.mode)
+        settings.setValue('power_mode', self.soapy.power_mode)
         settings.setValue('tau', self.tau)
         settings.setValue('favorites_list', self.memory)
         settings.setValue('volume', self.demod.vol)
@@ -134,6 +146,7 @@ class MainWindow(QMainWindow):
         self.enableNumba = settings.value('enable_numba', type=bool)
         self.enableStereo = settings.value('enable_stereo', type=bool)
         self.mode = settings.value('demodulation_mode', type=int)
+        self.soapy.power_mode = settings.value('power_mode', type=int)
         self.tau = settings.value('tau', type=float)
         self.vol = settings.value('volume', type=float)
 
@@ -142,12 +155,13 @@ class MainWindow(QMainWindow):
         print("[GUI] Enable Numba: {}".format(self.enableNumba))
         print("[GUI] Enable Stereo: {}".format(self.enableStereo))
         print("[GUI] Demodulator Mode: {}".format(self.mode))
+        print("[GUI] Power Mode: {}".format(self.soapy.power_mode))
         print("[GUI] Tau Value: {}".format(self.tau))
         print("[GUI] Volume Value: {}".format(self.vol))
         print("[GUI] Initial Freq: {}".format(self.freq))
 
         # Configure Universal Demodulator
-        self.demod = Demodulator(self.freq, self.enableCuda, self.enableNumba)
+        self.demod = Demodulator(self.soapy, self.enableCuda, self.enableNumba)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
         self.demod.tau = self.tau
@@ -197,7 +211,7 @@ class MainWindow(QMainWindow):
         self.freqLine.setText(str(int(newFreq)).zfill(9))
 
         if self.freq != newFreq:
-            self.demod.setFreq(newFreq)
+            self.soapy.tune(newFreq)
             self.freq = newFreq
 
     def setMode(self, newMode):
@@ -258,7 +272,7 @@ class MainWindow(QMainWindow):
         self.chBtn.setEnabled(opt)
 
     def updateDevices(self):
-        classes, devices = getDeviceList()
+        classes, devices = self.soapy.list()
         self.powerBtn.setEnabled(True if len(devices) > 0 else False)
 
         for i, device in enumerate(devices):
@@ -268,6 +282,9 @@ class MainWindow(QMainWindow):
 
         for i in range(self.deviceBox.count()):
             if self.deviceBox.itemData(i) not in devices:
+                if self.deviceBox.itemData(i) in self.soapy.device:
+                    print("[GUI] Device Removed!")
+                    self.soapy.abandon()
                 self.deviceBox.removeItem(i)
 
     def handleDevice(self, quiet=False):
@@ -277,7 +294,7 @@ class MainWindow(QMainWindow):
             return False
 
         try:
-            if newDevice not in self.demod.device:
+            if newDevice not in self.soapy.device:
                 self.demod.setDevice(newDevice)
             return True
         except Exception as e:

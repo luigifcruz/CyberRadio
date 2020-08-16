@@ -1,0 +1,48 @@
+FROM ubuntu:latest
+SHELL ["/bin/bash", "-i", "-c"]
+
+ARG PYTHON_VERSION=3.7.5
+
+## Install System Dependencies
+RUN apt update
+RUN apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        wget \
+        git \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libffi-dev \
+        libgdbm-dev \
+        uuid-dev \
+        upx \
+        gcc \
+        libxss1 \
+        ruby \
+        rubygems \
+        ruby-dev
+
+## Install Pyenv
+RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
+    && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
+    && source ~/.bashrc \
+    && curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash \
+    && echo 'eval "$(pyenv init -)"' >> ~/.bashrc \
+    && PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install $PYTHON_VERSION \
+    && source ~/.bashrc \
+    && pyenv global $PYTHON_VERSION
+
+## Install Arch Installer
+RUN gem install fpm
+
+## Install More Build Dependencies
+RUN pip install --upgrade pip
+RUN pip3 install fbs
+
+ADD . home
+COPY ./docker/installer/generator.sh generator.sh
+ENTRYPOINT ["bash", "./generator.sh"]

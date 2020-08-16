@@ -1,0 +1,24 @@
+FROM fedora:latest
+SHELL ["/bin/bash", "-i", "-c"]
+
+ARG PYTHON_VERSION=3.7.5
+
+## Install System Dependencies
+RUN dnf -y install \
+    ruby-devel \
+    gcc \
+    make \
+    rpm-build \
+    libffi-devel \
+    python-pip
+
+## Install Arch Installer
+RUN gem install fpm
+
+## Install More Build Dependencies
+RUN pip install --upgrade pip
+RUN pip3 install fbs
+
+ADD . home
+COPY ./docker/installer/generator.sh generator.sh
+ENTRYPOINT ["bash", "./generator.sh"]
