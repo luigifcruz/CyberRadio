@@ -158,10 +158,10 @@
     <widget class="QLineEdit" name="freqLine">
      <property name="geometry">
       <rect>
-       <x>11</x>
-       <y>6</y>
-       <width>281</width>
-       <height>44</height>
+       <x>0</x>
+       <y>0</y>
+       <width>301</width>
+       <height>51</height>
       </rect>
      </property>
      <property name="font">
@@ -183,7 +183,7 @@
       <enum>Qt::RightToLeft</enum>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: none; color: white; font-size: 40px; background-color: #2d2d2d; </string>
+      <string notr="true">border: none; color: white; font-size: 43px; background-color: transparent; </string>
      </property>
      <property name="inputMask">
       <string>099,999,999;_</string>
@@ -207,7 +207,7 @@
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="rds_large">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -226,10 +226,10 @@
       <string notr="true">border: none; color: #6E6E6E;  font-size: 12px;</string>
      </property>
      <property name="text">
-      <string>Marshmello: One Thing Right</string>
+      <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="rds_small">
      <property name="geometry">
       <rect>
        <x>219</x>
@@ -250,7 +250,7 @@
       <string notr="true">border: none; color: #6E6E6E;  font-size: 14px;</string>
      </property>
      <property name="text">
-      <string>KISS FM</string>
+      <string>WBFM</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -262,7 +262,7 @@
      <rect>
       <x>10</x>
       <y>98</y>
-      <width>80</width>
+      <width>81</width>
       <height>20</height>
      </rect>
     </property>
@@ -448,7 +448,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: #4bf6f4; border: none; border-radius: 6px;</string>
+     <string notr="true">background-color: transparent; border: 2px solid #4bf6f4; border-radius: 6px;</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -722,7 +722,6 @@
    <zorder>modAmBtn</zorder>
    <zorder>modFmBtn</zorder>
    <zorder>powerBtn</zorder>
-   <zorder>frame</zorder>
    <zorder>label</zorder>
    <zorder>label_2</zorder>
    <zorder>memA</zorder>
@@ -738,6 +737,7 @@
    <zorder>deviceBox</zorder>
    <zorder>settingsBtn</zorder>
    <zorder>label_5</zorder>
+   <zorder>frame</zorder>
   </widget>
  </widget>
  <resources/>

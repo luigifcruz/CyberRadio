@@ -69,13 +69,10 @@ CyberRadio icon made by <a href="https://www.flaticon.com/authors/freepik" title
 
 ## Roadmap
 This is a list of unfinished tasks that I pretend to pursue soon. Pull requests are more than welcome!
-- [ ] Study porting the UI to QML.
 - [ ] Add AM Support.
 - [ ] Add USB/LSB Support.
 - [ ] Add TX capability.
 - [ ] Finish RDS decoder.
-- [x] Add more settings.
-- [x] Implement settings memory.
 - [ ] Better Stereo reliability detector.
 - [ ] Docker cross-compiler for AArch-64.
 - [ ] Docker cross-compiler for Windows.
