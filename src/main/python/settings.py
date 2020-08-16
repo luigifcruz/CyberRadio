@@ -33,6 +33,8 @@ class SettingsWindow(QWidget):
         # Apply System Specific Settings
         if isCudaCapable():
             self.cudaCbx.setEnabled(True)
+        else:
+            print("[SETTINGS] Can't find CUPY nor CUSIGNAL. Disabling CUDA support.")
 
         if is_mac():
             self.cudaCbx.setEnabled(False)  # macOS doesn't support CUDA 🤷

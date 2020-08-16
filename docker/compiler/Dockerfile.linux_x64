@@ -1,0 +1,124 @@
+FROM ubuntu:16.04
+SHELL ["/bin/bash", "-i", "-c"]
+
+ARG PYTHON_VERSION=3.7.5
+
+## Install System Dependencies
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        wget \
+        git \
+        libbz2-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libffi-dev \
+        libgdbm-dev \
+        libgdbm3 \
+        uuid-dev \
+        upx \
+        libusb-1.0-0-dev \
+        gcc-4.8 \
+        g++-4.8 \
+        swig \
+        pkg-config \
+        libpulse-dev \
+        libxss1 \
+        libsamplerate-dev \
+        libasound2-dev \
+        portaudio19-dev
+
+## Build System Dependencies
+RUN wget https://www.zlib.net/fossils/zlib-1.2.9.tar.gz \
+    && tar -xvf zlib-1.2.9.tar.gz \
+    && cd zlib-1.2.9 \
+    && ./configure; make; make install \
+    && cd /lib/x86_64-linux-gnu \
+    && ln -s -f /usr/local/lib/libz.so.1.2.9/lib libz.so.1
+
+## Install Pyenv
+RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
+    && echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
+    && source ~/.bashrc \
+    && curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash \
+    && echo 'eval "$(pyenv init -)"' >> ~/.bashrc \
+    && PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install $PYTHON_VERSION \
+    && source ~/.bashrc \
+    && pyenv global $PYTHON_VERSION 
+
+## Install More Build Dependencies
+RUN pip install --upgrade pip
+RUN pip3 install cmake ninja
+
+## Install SoapySDR
+RUN git clone https://github.com/pothosware/SoapySDR.git \
+    && cd SoapySDR \
+    && mkdir build && cd build \
+    && cmake -GNinja -Wno-dev -DPYTHON_INSTALL_DIR=/root/.pyenv/versions/3.7.5/lib/python3.7/site-packages .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+## Install RTL-SDR SDK
+RUN git clone https://github.com/osmocom/rtl-sdr.git \
+    && cd rtl-sdr \
+    && mkdir build && cd build \
+    && cmake -GNinja -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/pothosware/SoapyRTLSDR.git \
+    && cd SoapyRTLSDR \
+    && mkdir build && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+## Install Airspy HF+ SDK
+RUN git clone https://github.com/airspy/airspyhf.git \
+    && cd airspyhf \
+    && mkdir build && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/pothosware/SoapyAirspyHF.git \
+    && cd SoapyAirspyHF \
+    && mkdir build && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+## Install LimeSDR SDK
+RUN git clone https://github.com/myriadrf/LimeSuite.git \
+    && cd LimeSuite \
+    && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+## Install Airspy One SDK
+RUN git clone https://github.com/airspy/airspyone_host.git \
+    && cd airspyone_host \
+    && mkdir build && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+RUN git clone https://github.com/pothosware/SoapyAirspy.git \
+    && cd SoapyAirspy \
+    && mkdir build && cd build \
+    && cmake -GNinja .. && ninja install \
+    && ldconfig \
+    && cd ./../..
+
+COPY ./requirements.txt .
+RUN cat requirements.txt
+RUN cat requirements.txt | xargs -n 1 -L 1 pip3 install
+
+ADD . home
+COPY ./docker/compiler/generator.sh generator.sh
+ENTRYPOINT ["bash", "./generator.sh"]
