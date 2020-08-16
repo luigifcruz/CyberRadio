@@ -1,0 +1,30 @@
+name: Validate Image
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Compiler
+      run: make compiler
+    
+    - name: Build CyberRadio
+      run: make build
+      
+    - name: Build Release
+      run: make release
+  
+    - uses: actions/upload-artifact@v2
+      with:
+        path: |
+          ${{ env.working-directory }}/target/CyberRadio.deb
+          ${{ env.working-directory }}/target/CyberRadio.pkg.xz
+          ${{ env.working-directory }}/target/CyberRadio.rpm
