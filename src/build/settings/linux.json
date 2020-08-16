@@ -1,6 +1,7 @@
 {
     "categories": "Utility;",
-    "description": "",
-    "author_email": "",
-    "url": ""
+    "mainteiner": "Luigi Cruz",
+    "description": "The simplest radio app for your SDR.",
+    "author_email": "luigifcruz@gmail.com",
+    "url": "cyberradio.luigi.ltd"
 }

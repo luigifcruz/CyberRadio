@@ -9,6 +9,8 @@
         "--hidden-import", "sounddevice",
         "--hidden-import", "scipy.special.cython_special",
         "--hidden-import", "radio.tools.pll._core",
+        "--add-binary", "/usr/lib/x86_64-linux-gnu/libxcb-xinerama.so.0.0.0:.",
+        "--add-binary", "/usr/lib/x86_64-linux-gnu/libxcb-xinerama.so.0:.",
         "--add-binary", "/usr/local/lib/libportaudio.so:.",
         "--add-binary", "/usr/local/lib/libportaudio.so.2:.",
         "--add-binary", "/usr/local/lib/libSoapySDR.so:./lib/sdr",
