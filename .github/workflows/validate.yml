@@ -25,6 +25,6 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         path: |
-          ${{ env.working-directory }}/target/CyberRadio.deb
-          ${{ env.working-directory }}/target/CyberRadio.pkg.xz
-          ${{ env.working-directory }}/target/CyberRadio.rpm
+          target/CyberRadio.deb
+          target/CyberRadio.pkg.xz
+          target/CyberRadio.rpm
