@@ -1,5 +1,5 @@
-ARG IMAGE_VER
-FROM ubuntu:${IMAGE_VER}
+ARG IMAGE
+FROM ${IMAGE}
 
 SHELL ["/bin/bash", "-i", "-c"]
 
@@ -133,21 +133,19 @@ RUN git clone https://git.assembla.com/portaudio.git \
     && ldconfig \
     && cd ./../..
 
-RUN export ARCH=$(uname -p)
-
-RUN if [ $(uname -p) == "aarch64" ]; \
+RUN if [ $(uname -m) == "aarch64" ]; \
     then apt-get install -y --no-install-recommends qt5-default python3-pyqt5; \
     fi
 
-RUN if [ $(uname -p) == "aarch64" ]; \
+RUN if [ $(uname -m) == "aarch64" ]; \
     then pip3 install -v pyqt5; \
     fi
 
-RUN if [ $(uname -p) == "aarch64" ]; \
+RUN if [ $(uname -m) == "aarch64" ]; \
     then apt-get install -y --no-install-recommends libblas3 liblapack3 liblapack-dev libblas-dev gfortran libatlas-base-dev; \
     fi
 
-RUN if [ $(uname -p) == "aarch64" ]; \
+RUN if [ $(uname -m) == "aarch64" ]; \
     then pip3 install -v scipy; \
     fi
 

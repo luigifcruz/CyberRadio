@@ -5,8 +5,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Build x86 Binaries
+  build_amd64:
+    name: Build AMD64 Binaries
     runs-on: ubuntu-latest
 
     steps:
@@ -26,15 +26,49 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CyberRadio.x86.deb
+        name: CyberRadio.amd64.deb
         path: target/CyberRadio.deb
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CyberRadio.x86.pkg.tar.xz
+        name: CyberRadio.amd64.pkg.tar.xz
         path: target/CyberRadio.pkg.tar.xz
 
     - uses: actions/upload-artifact@v2
       with:
-        name: CyberRadio.x86.rpm
+        name: CyberRadio.amd64.rpm
+        path: target/CyberRadio.rpm
+
+  build_arm64v8:
+    name: Build ARM64/V8 Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Compiler
+      run: make compiler
+
+    - name: Build Installer
+      run: make installer
+
+    - name: Build CyberRadio
+      run: make build
+
+    - name: Build Release
+      run: make release
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CyberRadio.arm64v8.deb
+        path: target/CyberRadio.deb
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CyberRadio.arm64v8.pkg.tar.xz
+        path: target/CyberRadio.pkg.tar.xz
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CyberRadio.arm64v8.rpm
         path: target/CyberRadio.rpm

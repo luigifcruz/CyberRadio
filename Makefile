@@ -1,14 +1,29 @@
 CD = $(shell pwd)
 VER = $(shell git describe --tags)
-ARCH = $(shell uname -p)
-IMAGE_VER = 16.04
+ARCH = $(shell uname -m)
 
+## Compiler Base Image (AMD64)
+COMP_IMG = ubuntu:16.04
+
+## Installer Base Image (AMD64)
+ARCH_IMG = archlinux:latest
+UBNT_IMG = ubuntu:latest
+FDRA_IMG = fedora:latest
+
+## Base Images Override (ARM64V8)
 ifeq ($(ARCH), aarch64)
-IMAGE_VER = 18.04
+COMP_IMG = ubuntu:18.04
+UBNT_IMG = ubuntu:18.04
+ARCH_IMG = agners/archlinuxarm-arm64v8
+FDRA_IMG = fedora:30
 endif
 
-$(info Host arch is $(ARCH))
-$(info Compiler image version is $(IMAGE_VER))
+## Print Base Images to Console
+$(info ++++++++++++++++++++++++++++++++++++++++++)
+$(info HOST ARCH IS $(ARCH))
+$(info COMPILER  BASE IMAGE: $(COMP_IMG))
+$(info INSTALLER BASE IMAGE: $(ARCH_IMG), $(UBNT_IMG), $(FDRA_IMG))
+$(info ++++++++++++++++++++++++++++++++++++++++++)
 
 all: compiler installer build release
 
@@ -16,14 +31,12 @@ fix-permission:
 	sudo chown -fR $(shell whoami) target || :
 
 compiler:
-	docker build --build-arg IMAGE_VER=$(IMAGE_VER) -t cyber_linux_compiler -f ./docker/compiler/Dockerfile.linux .
+	docker build --build-arg IMAGE=$(COMP_IMG) -t cyber_linux_compiler -f ./docker/compiler/Dockerfile.linux .
 
 installer:
-ifneq ($(ARCH), aarch64)
-	docker build -t cyber_pkg_installer -f ./docker/installer/Dockerfile.pkg .
-endif
-	docker build -t cyber_deb_installer -f ./docker/installer/Dockerfile.deb .
-	docker build -t cyber_rpm_installer -f ./docker/installer/Dockerfile.rpm .
+	docker build --build-arg IMAGE=$(ARCH_IMG) -t cyber_pkg_installer -f ./docker/installer/Dockerfile.pkg .
+	docker build --build-arg IMAGE=$(UBNT_IMG) -t cyber_deb_installer -f ./docker/installer/Dockerfile.deb .
+	docker build --build-arg IMAGE=$(FDRA_IMG) -t cyber_rpm_installer -f ./docker/installer/Dockerfile.rpm .
 
 build:
 	docker run -v $(CD):/home cyber_linux_compiler

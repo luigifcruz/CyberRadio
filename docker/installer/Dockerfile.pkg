@@ -1,4 +1,6 @@
-FROM archlinux:latest
+ARG IMAGE
+FROM ${IMAGE}
+
 SHELL ["/bin/bash", "-i", "-c"]
 
 ARG PYTHON_VERSION=3.7.5
