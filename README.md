@@ -1,6 +1,6 @@
 # 📻 CyberRadio
 ### An SDR based FM/AM radio App for the desktop. [Video Demo](https://twitter.com/luigifcruz/status/1218739111332282368?s=20)
-Compatible with most SDRs supported by SoapySDR. Based on the [radio-core](https://github.com/luigifreitas/radio-core) module. Accelerated on the GPU with CUDA by [#cuSignal](https://github.com/rapidsai/cusignal) and on the CPU with [Numba](https://numba.pydata.org/) functions.
+Compatible with most SDRs supported by SoapySDR. Based on the [radio-core](https://github.com/luigifreitas/radio-core) module. Accelerated on the GPU with CUDA by [#cuSignal](https://github.com/rapidsai/cusignal) functions.
 
 <p align="center">
 <img src="https://github.com/luigifreitas/CyberRadio/raw/master/cyberradio.png" />

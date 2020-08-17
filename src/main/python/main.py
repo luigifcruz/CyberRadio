@@ -111,7 +111,6 @@ class MainWindow(QMainWindow):
             print("[GUI] Previous settings not found. Creating new ones.")
             settings.setValue('settings_set', True)
             settings.setValue('enable_cuda', False)
-            settings.setValue('enable_numba', not is_mac())
             settings.setValue('enable_stereo', True)
             settings.setValue('last_frequency', 96.9e6)
             settings.setValue('demodulation_mode', 0)
@@ -126,7 +125,6 @@ class MainWindow(QMainWindow):
         settings = QSettings('luigicruz', 'CyberRadio')
         settings.setValue('last_frequency', self.freq)
         settings.setValue('enable_cuda', self.enableCuda)
-        settings.setValue('enable_numba', self.enableNumba)
         settings.setValue('enable_stereo', self.enableStereo)
         settings.setValue('demodulation_mode', self.demod.mode)
         settings.setValue('power_mode', self.soapy.power_mode)
@@ -143,7 +141,6 @@ class MainWindow(QMainWindow):
         self.memory = settings.value('favorites_list')
         self.freq = settings.value('last_frequency', type=float)
         self.enableCuda = settings.value('enable_cuda', type=bool)
-        self.enableNumba = settings.value('enable_numba', type=bool)
         self.enableStereo = settings.value('enable_stereo', type=bool)
         self.mode = settings.value('demodulation_mode', type=int)
         self.soapy.power_mode = settings.value('power_mode', type=int)
@@ -152,7 +149,6 @@ class MainWindow(QMainWindow):
 
         # Print Configurations
         print("[GUI] Enable CUDA: {}".format(self.enableCuda))
-        print("[GUI] Enable Numba: {}".format(self.enableNumba))
         print("[GUI] Enable Stereo: {}".format(self.enableStereo))
         print("[GUI] Demodulator Mode: {}".format(self.mode))
         print("[GUI] Power Mode: {}".format(self.soapy.power_mode))
@@ -161,7 +157,7 @@ class MainWindow(QMainWindow):
         print("[GUI] Initial Freq: {}".format(self.freq))
 
         # Configure Universal Demodulator
-        self.demod = Demodulator(self.soapy, self.enableCuda, self.enableNumba)
+        self.demod = Demodulator(self.soapy, self.enableCuda)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
         self.demod.tau = self.tau

@@ -9,12 +9,11 @@ import importlib
 
 class Demodulator(QThread):
 
-    def __init__(self, soapy, cuda=False, numba=False):
+    def __init__(self, soapy, cuda=False):
         QThread.__init__(self)
 
         # Global Settings
         self.soapy = soapy
-        self.numba = numba
         self.cuda = cuda
         self.running = False
         self.pmode = 1
@@ -48,7 +47,7 @@ class Demodulator(QThread):
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
 
         self.dec = Decimator(self.sfs, self.mfs, cuda=self.cuda)
-        self.wbfm = WBFM(self.tau, self.mfs, self.afs, cuda=self.cuda, numba=self.numba)
+        self.wbfm = WBFM(self.tau, self.mfs, self.afs, cuda=self.cuda)
 
     def stop(self):
         print("[DEMOD] Stopping.")

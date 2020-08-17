@@ -17,8 +17,6 @@ class SettingsWindow(QWidget):
         self.show()
 
     def populateSettings(self):
-        self.numbaCbx.setChecked(self.parent.enableNumba)
-
         self.cudaCbx.setChecked(self.parent.enableCuda)
         self.cudaCbx.setEnabled(False)
 
@@ -41,7 +39,6 @@ class SettingsWindow(QWidget):
 
     def closeEvent(self, event):
         self.parent.enableCuda = self.cudaCbx.isChecked()
-        self.parent.enableNumba = self.numbaCbx.isChecked()
         self.parent.stereoCbx = self.stereoCbx.isChecked()
 
         if self.deemp50Rdio.isChecked():

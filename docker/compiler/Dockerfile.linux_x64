@@ -30,15 +30,16 @@ RUN apt-get install -y --no-install-recommends \
         libxss1 \
         libsamplerate-dev \
         libasound2-dev \
-        libxcb-xinerama0-dev
+        libxcb-xinerama0-dev \
+        cmake
 
 ## Build System Dependencies
 RUN wget https://www.zlib.net/fossils/zlib-1.2.9.tar.gz \
     && tar -xvf zlib-1.2.9.tar.gz \
     && cd zlib-1.2.9 \
-    && ./configure; make; make install \
-    && cd /lib/x86_64-linux-gnu \
-    && ln -s -f /usr/local/lib/libz.so.1.2.9/lib libz.so.1
+    && ./configure \
+    && make -j$(nproc) install \
+    && cd ./..
 
 ## Install Pyenv
 RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
@@ -46,13 +47,20 @@ RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
     && source ~/.bashrc \
     && curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash \
     && echo 'eval "$(pyenv init -)"' >> ~/.bashrc \
-    && PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install $PYTHON_VERSION \
+    && PYTHON_CONFIGURE_OPTS="--enable-shared" MAKE_OPTS="-j$(nproc)" pyenv install $PYTHON_VERSION \
     && source ~/.bashrc \
-    && pyenv global $PYTHON_VERSION 
+    && pyenv global $PYTHON_VERSION
 
-## Install More Build Dependencies
-RUN pip install --upgrade pip
-RUN pip3 install cmake ninja
+RUN git clone https://github.com/Kitware/CMake.git \
+    && cd CMake \
+    && mkdir build && cd build \
+    && cmake .. && make -j$(nproc) install \
+    && ldconfig \
+    && cd ./../..
+
+## Install Additional System Dependencies
+RUN pip install pip --upgrade
+RUN pip install ninja
 
 ## Install SoapySDR
 RUN git clone https://github.com/pothosware/SoapySDR.git \
@@ -120,7 +128,7 @@ RUN git clone https://git.assembla.com/portaudio.git \
     && cd portaudio \
     && wget https://lists.columbia.edu/pipermail/portaudio/attachments/20190726/10029c93/attachment.bin \
     && patch -p1 -ruN -d . < attachment.bin \
-    && ./configure && make -j8 install \
+    && ./configure && make -j$(nproc) install \
     && ldconfig \
     && cd ./../..
 
