@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    name: Build x86 Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Compiler
+      run: make compiler
+    
+    - name: Build CyberRadio
+      run: make build
+      
+    - name: Build Release
+      run: make release
+
+    - name: Upload Debian Release
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: target/CyberRadio.deb
+        asset_name: CyberRadio.x86.deb
+        asset_content_type: application/vnd.debian.binary-package
+
+    - name: Upload Arch Release
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: target/CyberRadio.pkg.tar.xz
+        asset_name: CyberRadio.x86.pkg.tar.xz
+        asset_content_type: application/x-tar
+
+    - name: Upload Fedora Release
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: target/CyberRadio.rpm
+        asset_name: CyberRadio.x86.rpm
+        asset_content_type: application/zip
