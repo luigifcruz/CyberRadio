@@ -1,10 +1,10 @@
-FROM ubuntu:latest
+FROM ubuntu:18.04
 SHELL ["/bin/bash", "-i", "-c"]
 
 ARG PYTHON_VERSION=3.7.5
 
 ## Install System Dependencies
-RUN apt update
+RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
@@ -32,7 +32,7 @@ RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
     && source ~/.bashrc \
     && curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash \
     && echo 'eval "$(pyenv init -)"' >> ~/.bashrc \
-    && PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install $PYTHON_VERSION \
+    && PYTHON_CONFIGURE_OPTS="--enable-shared" MAKE_OPTS="-j$(nproc)" pyenv install $PYTHON_VERSION \
     && source ~/.bashrc \
     && pyenv global $PYTHON_VERSION
 
