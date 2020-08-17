@@ -22,7 +22,7 @@ jobs:
       run: make release
 
     - name: Upload Debian Release
-      id: upload-release-asset 
+      id: upload-debian-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
         asset_content_type: application/vnd.debian.binary-package
 
     - name: Upload Arch Release
-      id: upload-release-asset 
+      id: upload-arch-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +44,7 @@ jobs:
         asset_content_type: application/x-tar
 
     - name: Upload Fedora Release
-      id: upload-release-asset 
+      id: upload-fedora-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
