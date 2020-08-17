@@ -11,26 +11,29 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Build Compiler
       run: make compiler
-    
+
+    - name: Build Installer
+      run: make installer
+
     - name: Build CyberRadio
       run: make build
-      
+
     - name: Build Release
       run: make release
-  
+
     - uses: actions/upload-artifact@v2
       with:
         name: CyberRadio.x86.deb
         path: target/CyberRadio.deb
-        
+
     - uses: actions/upload-artifact@v2
       with:
         name: CyberRadio.x86.pkg.tar.xz
-        path: target/CyberRadio.pkg.tar.xz   
-    
+        path: target/CyberRadio.pkg.tar.xz
+
     - uses: actions/upload-artifact@v2
       with:
         name: CyberRadio.x86.rpm
