@@ -5,6 +5,8 @@ SHELL ["/bin/bash", "-i", "-c"]
 
 ARG PYTHON_VERSION=3.7.5
 
+RUN echo "fastestmirror=true" >> /etc/dnf/dnf.conf
+
 ## Install System Dependencies
 RUN dnf -y install \
     ruby-devel \

@@ -6,7 +6,7 @@ SHELL ["/bin/bash", "-i", "-c"]
 ARG PYTHON_VERSION=3.7.5
 
 ## Install System Dependencies
-RUN pacman -Syu --noconfirm git ruby rubygems gcc make
+RUN pacman -Syu --noconfirm git ruby rubygems gcc make gawk
 
 ## Install Pyenv
 RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
