@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build x86 Binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build Compiler
+      run: make compiler
+    
+    - name: Build CyberRadio
+      run: make build
+      
+    - name: Build Release
+      run: make release
