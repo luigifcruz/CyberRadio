@@ -1,6 +1,6 @@
+pyqt5
+fbs
+radio-core
 numpy
 scipy
 sounddevice
-pyqt5
-fbs
-git+https://github.com/luigifreitas/radio-core.git

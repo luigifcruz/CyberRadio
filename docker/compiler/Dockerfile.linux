@@ -1,4 +1,6 @@
-FROM ubuntu:16.04
+ARG IMAGE_VER
+FROM ubuntu:${IMAGE_VER}
+
 SHELL ["/bin/bash", "-i", "-c"]
 
 ARG PYTHON_VERSION=3.7.5
@@ -18,7 +20,6 @@ RUN apt-get install -y --no-install-recommends \
         zlib1g-dev \
         libffi-dev \
         libgdbm-dev \
-        libgdbm3 \
         uuid-dev \
         upx \
         libusb-1.0-0-dev \
@@ -131,6 +132,24 @@ RUN git clone https://git.assembla.com/portaudio.git \
     && ./configure && make -j$(nproc) install \
     && ldconfig \
     && cd ./../..
+
+RUN export ARCH=$(uname -p)
+
+RUN if [ $(uname -p) == "aarch64" ]; \
+    then apt-get install -y --no-install-recommends qt5-default python3-pyqt5; \
+    fi
+
+RUN if [ $(uname -p) == "aarch64" ]; \
+    then pip3 install -v pyqt5; \
+    fi
+
+RUN if [ $(uname -p) == "aarch64" ]; \
+    then apt-get install -y --no-install-recommends libblas3 liblapack3 liblapack-dev libblas-dev gfortran libatlas-base-dev; \
+    fi
+
+RUN if [ $(uname -p) == "aarch64" ]; \
+    then pip3 install -v scipy; \
+    fi
 
 COPY ./requirements.txt .
 RUN cat requirements.txt
