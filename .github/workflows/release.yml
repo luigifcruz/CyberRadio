@@ -86,25 +86,3 @@ jobs:
         asset_path: target/CyberRadio.deb
         asset_name: CyberRadio.arm64v8.deb
         asset_content_type: application/vnd.debian.binary-package
-
-    - name: Upload Arch Release
-      id: upload-arch-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: target/CyberRadio.pkg.tar.xz
-        asset_name: CyberRadio.arm64v8.pkg.tar.xz
-        asset_content_type: application/x-tar
-
-    - name: Upload Fedora Release
-      id: upload-fedora-release-asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: target/CyberRadio.rpm
-        asset_name: CyberRadio.arm64v8.rpm
-        asset_content_type: application/zip

@@ -14,8 +14,6 @@ FDRA_IMG = fedora:latest
 ifeq ($(ARCH), aarch64)
 COMP_IMG = ubuntu:18.04
 UBNT_IMG = ubuntu:18.04
-ARCH_IMG = agners/archlinuxarm-arm64v8:20190814
-FDRA_IMG = fedora:30
 endif
 
 ## Print Base Images to Console
@@ -34,9 +32,11 @@ compiler:
 	docker build --build-arg IMAGE=$(COMP_IMG) -t cyber_linux_compiler -f ./docker/compiler/Dockerfile.linux .
 
 installer:
-	docker build --build-arg IMAGE=$(ARCH_IMG) -t cyber_pkg_installer -f ./docker/installer/Dockerfile.pkg .
 	docker build --build-arg IMAGE=$(UBNT_IMG) -t cyber_deb_installer -f ./docker/installer/Dockerfile.deb .
+ifneq ($(ARCH), aarch64)
+	docker build --build-arg IMAGE=$(ARCH_IMG) -t cyber_pkg_installer -f ./docker/installer/Dockerfile.pkg .
 	docker build --build-arg IMAGE=$(FDRA_IMG) -t cyber_rpm_installer -f ./docker/installer/Dockerfile.rpm .
+endif
 
 build:
 	docker run -v $(CD):/home cyber_linux_compiler

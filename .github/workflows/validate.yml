@@ -62,13 +62,3 @@ jobs:
       with:
         name: CyberRadio.arm64v8.deb
         path: target/CyberRadio.deb
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: CyberRadio.arm64v8.pkg.tar.xz
-        path: target/CyberRadio.pkg.tar.xz
-
-    - uses: actions/upload-artifact@v2
-      with:
-        name: CyberRadio.arm64v8.rpm
-        path: target/CyberRadio.rpm
