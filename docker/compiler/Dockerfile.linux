@@ -150,7 +150,6 @@ RUN if [ $(uname -m) == "aarch64" ]; \
     fi
 
 COPY ./requirements.txt .
-RUN cat requirements.txt
 RUN cat requirements.txt | xargs -n 1 -L 1 pip3 install
 
 ADD . home

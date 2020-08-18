@@ -17,7 +17,7 @@ RUN dnf -y install \
     python-pip
 
 ## Install Arch Installer
-RUN gem install fpm
+RUN gem install --no-document fpm
 
 ## Install More Build Dependencies
 RUN pip install --upgrade pip

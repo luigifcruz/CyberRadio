@@ -14,7 +14,7 @@ FDRA_IMG = fedora:latest
 ifeq ($(ARCH), aarch64)
 COMP_IMG = ubuntu:18.04
 UBNT_IMG = ubuntu:18.04
-ARCH_IMG = agners/archlinuxarm-arm64v8
+ARCH_IMG = agners/archlinuxarm-arm64v8:20190814
 FDRA_IMG = fedora:30
 endif
 
