@@ -41,7 +41,7 @@ jobs:
 
   build_arm64v8:
     name: Build ARM64/V8 Binaries
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, linux, ARM64 ]
 
     steps:
     - uses: actions/checkout@v2
