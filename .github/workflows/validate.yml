@@ -12,6 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Check Permissions
+      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio
+
     - name: Build Compiler
       run: make compiler
 
@@ -45,6 +48,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Check Permissions
+      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio
 
     - name: Build Compiler
       run: make compiler
