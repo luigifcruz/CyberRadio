@@ -45,6 +45,8 @@ RUN gem install --no-document fpm
 RUN pip install --upgrade pip
 RUN pip3 install fbs
 
+RUN sed -i '1s/^/NAME=\"Ubuntu\"\n/' /etc/os-release
+
 ADD . home
 COPY ./docker/installer/generator.sh generator.sh
 ENTRYPOINT ["bash", "./generator.sh"]

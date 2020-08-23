@@ -3,7 +3,7 @@ VER = $(shell git describe --tags)
 ARCH = $(shell uname -m)
 
 ## Compiler Base Image (AMD64)
-COMP_IMG = ubuntu:16.04
+COMP_IMG = debian:oldstable
 
 ## Installer Base Image (AMD64)
 ARCH_IMG = archlinux:latest
@@ -12,8 +12,8 @@ FDRA_IMG = fedora:latest
 
 ## Base Images Override (ARM64V8)
 ifeq ($(ARCH), aarch64)
-COMP_IMG = ubuntu:18.04
-UBNT_IMG = ubuntu:18.04
+COMP_IMG = debian:oldstable
+UBNT_IMG = debian:oldstable
 endif
 
 ## Print Base Images to Console
@@ -43,7 +43,9 @@ build:
 	make fix-permission
 
 release:
-	docker run -v $(CD):/home cyber_pkg_installer
 	docker run -v $(CD):/home cyber_deb_installer
+ifneq ($(ARCH), aarch64)
+	docker run -v $(CD):/home cyber_pkg_installer
 	docker run -v $(CD):/home cyber_rpm_installer
+endif
 	make fix-permission

@@ -23,8 +23,8 @@ RUN apt-get install -y --no-install-recommends \
         uuid-dev \
         upx \
         libusb-1.0-0-dev \
-        gcc-4.8 \
-        g++-4.8 \
+        gcc \
+        g++ \
         swig \
         pkg-config \
         libpulse-dev \
