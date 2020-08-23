@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-
     - name: Check Permissions
-      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio
+      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio || true
+
+    - uses: actions/checkout@v2
 
     - name: Build Compiler
       run: make compiler
@@ -47,10 +47,10 @@ jobs:
     runs-on: [ self-hosted, linux, ARM64 ]
 
     steps:
-    - uses: actions/checkout@v2
-
     - name: Check Permissions
-      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio
+      run: sudo chown -R $USER:$USER /home/$USER/actions-runner/_work/CyberRadio || true
+
+    - uses: actions/checkout@v2
 
     - name: Build Compiler
       run: make compiler
