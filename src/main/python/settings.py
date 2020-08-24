@@ -1,7 +1,9 @@
+import os
 from fbs_runtime.platform import is_mac
 from PyQt5.QtWidgets import QWidget
 from utils import isCudaCapable
 from PyQt5 import uic
+from elevate import elevate
 
 
 class SettingsWindow(QWidget):
@@ -13,8 +15,18 @@ class SettingsWindow(QWidget):
         self.setWindowTitle("Settings")
         self.populateSettings()
 
+        self.installUdevBtn.clicked.connect(self.handleUdev)
+
         self.parent.setEnabled(False)
         self.show()
+
+    def handleUdev(self):
+        cmd = "uname -a"
+
+        if os.getuid() != 0:
+            cmd = "pkexec " + cmd
+
+        print(os.system(cmd))
 
     def populateSettings(self):
         self.cudaCbx.setChecked(self.parent.enableCuda)
@@ -22,6 +34,8 @@ class SettingsWindow(QWidget):
 
         self.stereoCbx.setChecked(self.parent.enableStereo)
         self.stereoCbx.setEnabled(False)
+
+        self.bufferMult.setValue(self.parent.buffer_mult)
 
         if self.parent.tau == 75e-6:
             self.deemp75Rdio.setChecked(True)
@@ -40,6 +54,7 @@ class SettingsWindow(QWidget):
     def closeEvent(self, event):
         self.parent.enableCuda = self.cudaCbx.isChecked()
         self.parent.stereoCbx = self.stereoCbx.isChecked()
+        self.parent.buffer_mult = self.bufferMult.value()
 
         if self.deemp50Rdio.isChecked():
             self.parent.tau = 50e-6

@@ -118,6 +118,7 @@ class MainWindow(QMainWindow):
             settings.setValue('tau', 75e-6)
             settings.setValue('favorites_list', defaultFavorites())
             settings.setValue('volume', 0)
+            settings.setValue('buffer_mult', 8)
             del settings
 
     def saveSettings(self):
@@ -131,6 +132,7 @@ class MainWindow(QMainWindow):
         settings.setValue('tau', self.tau)
         settings.setValue('favorites_list', self.memory)
         settings.setValue('volume', self.demod.vol)
+        settings.setValue('buffer_mult', self.buffer_mult)
         del settings
 
     def loadSettings(self):
@@ -146,6 +148,7 @@ class MainWindow(QMainWindow):
         self.soapy.power_mode = settings.value('power_mode', type=int)
         self.tau = settings.value('tau', type=float)
         self.vol = settings.value('volume', type=float)
+        self.buffer_mult = settings.value('buffer_mult', type=int)
 
         # Print Configurations
         print("[GUI] Enable CUDA: {}".format(self.enableCuda))
@@ -155,9 +158,12 @@ class MainWindow(QMainWindow):
         print("[GUI] Tau Value: {}".format(self.tau))
         print("[GUI] Volume Value: {}".format(self.vol))
         print("[GUI] Initial Freq: {}".format(self.freq))
+        print("[GUI] Buffer Multiplier: {}".format(self.buffer_mult))
 
         # Configure Universal Demodulator
         self.demod = Demodulator(self.soapy, self.enableCuda)
+        if self.soapy.device:
+            self.demod.setDevice(self.soapy.device, self.buffer_mult)
         self.demod.mode = self.mode
         self.demod.vol = self.vol
         self.demod.tau = self.tau
@@ -291,7 +297,7 @@ class MainWindow(QMainWindow):
 
         try:
             if newDevice not in self.soapy.device:
-                self.demod.setDevice(newDevice)
+                self.demod.setDevice(newDevice, self.buffer_mult)
             return True
         except Exception as e:
             if not quiet:
