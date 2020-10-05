@@ -29,7 +29,7 @@ class Demodulator(QThread):
         self.que = queue.Queue()
         self.sd = importlib.import_module("sounddevice")
 
-    def setDevice(self, device):
+    def setDevice(self, device, buffer_mult=8):
         self.sfs = int(768e3)
         self.mfs = int(240e3)
         self.afs = int(48e3)
@@ -42,7 +42,7 @@ class Demodulator(QThread):
         print("[DEMOD] Sampling Rate: {}".format(self.sfs))
 
         self.sdr_buff = 2048
-        self.dsp_buff = self.sdr_buff * 8
+        self.dsp_buff = self.sdr_buff * buffer_mult
         self.dec_out = int(np.ceil(self.dsp_buff/(self.sfs/self.mfs)))
         self.dsp_out = int(np.ceil(self.dec_out/(self.mfs/self.afs)))
 
